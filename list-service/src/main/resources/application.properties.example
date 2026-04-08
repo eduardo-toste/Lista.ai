@@ -1,6 +1,6 @@
 spring.application.name=list-service
 
-spring.datasource.url=jdbc:postgresql://localhost:5432/list-db
+spring.datasource.url=jdbc:postgresql://localhost:5432/list_db
 spring.datasource.username=example_user
 spring.datasource.password=example_password
 spring.datasource.driver-class-name=org.postgresql.Driver
