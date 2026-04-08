@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  list-db:
+    image: postgres:16
+    container_name: list-service-db
+    environment:
+      POSTGRES_DB: ${LIST_SERVICE_DB}
+      POSTGRES_USER: ${LIST_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${LIST_SERVICE_DB_PASSWORD}
+    ports:
+      - "${LIST_SERVICE_DB_PORT}:5432"
+    volumes:
+      - list_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${LIST_SERVICE_DB_USER} -d ${LIST_SERVICE_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  list_db_data:
