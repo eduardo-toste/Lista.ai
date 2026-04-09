@@ -1,4 +1,4 @@
-package com.listaai.list.domain.exception;
+package com.listaai.list.domain.exception.item;
 
 public class ItemNotFoundException extends RuntimeException {
 
