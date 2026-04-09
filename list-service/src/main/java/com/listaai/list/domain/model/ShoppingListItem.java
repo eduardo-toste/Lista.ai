@@ -40,6 +40,10 @@ public class ShoppingListItem {
         this.purchased = false;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
