@@ -1,4 +1,4 @@
-package com.listaai.list.domain.exception;
+package com.listaai.list.domain.exception.participant;
 
 public class ParticipantAlreadyAddedException extends RuntimeException {
 
