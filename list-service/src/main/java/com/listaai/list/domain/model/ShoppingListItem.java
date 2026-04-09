@@ -26,28 +26,30 @@ public class ShoppingListItem {
         this.purchased = false;
     }
 
-    public String getName() {
-        return name;
+    public void update(String name, int quantity, ItemUnit unit) {
+        this.name = name;
+        this.quantity = quantity;
+        this.unit = unit;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void markAsPurchased() {
+        this.purchased = true;
+    }
+
+    public void unmarkAsPurchased() {
+        this.purchased = false;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
     public ItemUnit getUnit() {
         return unit;
-    }
-
-    public void setUnit(ItemUnit unit) {
-        this.unit = unit;
     }
 
     public boolean isPurchased() {
