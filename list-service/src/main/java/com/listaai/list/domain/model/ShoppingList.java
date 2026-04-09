@@ -1,10 +1,12 @@
 package com.listaai.list.domain.model;
 
 import com.listaai.list.domain.enums.ItemUnit;
-import com.listaai.list.domain.exception.ItemAlreadyAddedException;
-import com.listaai.list.domain.exception.ItemNotFoundException;
-import com.listaai.list.domain.exception.ParticipantAlreadyAddedException;
-import com.listaai.list.domain.exception.ParticipantNotFoundException;
+import com.listaai.list.domain.exception.item.ItemAlreadyAddedException;
+import com.listaai.list.domain.exception.item.ItemNotFoundException;
+import com.listaai.list.domain.exception.list.EmptyShoppingListCannotBeSharedException;
+import com.listaai.list.domain.exception.list.ShoppingListWithoutParticipantsCannotBeSharedException;
+import com.listaai.list.domain.exception.participant.ParticipantAlreadyAddedException;
+import com.listaai.list.domain.exception.participant.ParticipantNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +71,16 @@ public class ShoppingList {
     public void removeParticipant(Long participantId) {
         ShoppingListParticipant participant = findParticipantById(participantId);
         this.participants.remove(participant);
+    }
+
+    public void validateCanBeShared() {
+        if (this.items.isEmpty()) {
+            throw new EmptyShoppingListCannotBeSharedException();
+        }
+
+        if (this.participants.isEmpty()) {
+            throw new ShoppingListWithoutParticipantsCannotBeSharedException();
+        }
     }
 
     private ShoppingListItem findItemById(Long itemId) {
