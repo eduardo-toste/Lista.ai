@@ -1,12 +1,19 @@
 package com.listaai.list.adapter.outbound.persistence.entity;
 
-import com.listaai.list.domain.model.ShoppingList;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @Entity
 @Table(name = "participants")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class ShoppingListParticipantEntity {
 
     @Id
@@ -19,25 +26,5 @@ public class ShoppingListParticipantEntity {
     @ManyToMany(mappedBy = "participants", fetch = FetchType.LAZY)
     private List<ShoppingListEntity> shoppingLists;
 
-    public ShoppingListParticipantEntity(Long id, String name, String phoneNumber) {
-        this.id = id;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-    }
-
-    public ShoppingListParticipantEntity() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
 }
 

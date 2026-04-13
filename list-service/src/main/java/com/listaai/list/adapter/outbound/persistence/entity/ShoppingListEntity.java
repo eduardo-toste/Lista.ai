@@ -1,11 +1,19 @@
 package com.listaai.list.adapter.outbound.persistence.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @Entity
 @Table(name = "lists")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class ShoppingListEntity {
 
     @Id
@@ -25,29 +33,4 @@ public class ShoppingListEntity {
     )
     private List<ShoppingListParticipantEntity> participants;
 
-    public ShoppingListEntity(Long id, String name, List<ShoppingListItemEntity> items, List<ShoppingListParticipantEntity> participants) {
-        this.id = id;
-        this.name = name;
-        this.items = items;
-        this.participants = participants;
-    }
-
-    public ShoppingListEntity() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<ShoppingListItemEntity> getItems() {
-        return items;
-    }
-
-    public List<ShoppingListParticipantEntity> getParticipants() {
-        return participants;
-    }
 }
