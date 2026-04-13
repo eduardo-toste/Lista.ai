@@ -7,20 +7,17 @@ import com.listaai.list.application.dto.input.CreateShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.port.inbound.CreateShoppingListUseCase;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/list")
+@RequiredArgsConstructor
 public class ShoppingListController {
 
-    private CreateShoppingListUseCase createShoppingListUseCase;
-    private ShoppingListMapper shoppingListMapper;
-
-    public ShoppingListController(CreateShoppingListUseCase createShoppingListUseCase, ShoppingListMapper shoppingListMapper) {
-        this.createShoppingListUseCase = createShoppingListUseCase;
-        this.shoppingListMapper = shoppingListMapper;
-    }
+    private final CreateShoppingListUseCase createShoppingListUseCase;
+    private final ShoppingListMapper shoppingListMapper;
 
     @PostMapping
     public ResponseEntity<ShoppingListResponse> createList(@RequestBody @Valid CreateShoppingListRequest request) {
