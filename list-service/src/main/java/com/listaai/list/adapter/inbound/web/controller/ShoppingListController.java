@@ -20,7 +20,7 @@ public class ShoppingListController {
     private final ShoppingListMapper shoppingListMapper;
 
     @PostMapping
-    public ResponseEntity<ShoppingListResponse> createList(@RequestBody @Valid CreateShoppingListRequest request) {
+    public ResponseEntity<ShoppingListResponse> createShoppingList(@RequestBody @Valid CreateShoppingListRequest request) {
         CreateShoppingListCommand command = shoppingListMapper.toCommand(request);
         ShoppingListOutput output = createShoppingListUseCase.createShoppingList(command);
         ShoppingListResponse response = shoppingListMapper.toResponse(output);
