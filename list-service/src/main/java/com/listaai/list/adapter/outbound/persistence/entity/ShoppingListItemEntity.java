@@ -2,10 +2,7 @@ package com.listaai.list.adapter.outbound.persistence.entity;
 
 import com.listaai.list.domain.enums.ItemUnit;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "items")
@@ -13,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class ShoppingListItemEntity {
 
     @Id
