@@ -5,11 +5,11 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
-public record CreateListRequest(
+public record CreateShoppingListRequest(
 
         @NotBlank String name,
-        @NotEmpty List<CreateListItemRequest> items,
-        List<CreateListParticipantRequest> participants
+        @NotEmpty List<CreateShoppingListItemRequest> items,
+        List<CreateShoppingListParticipantRequest> participants
 
 ) {
 }

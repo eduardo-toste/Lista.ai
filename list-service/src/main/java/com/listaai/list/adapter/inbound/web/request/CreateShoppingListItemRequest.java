@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record CreateListItemRequest(
+public record CreateShoppingListItemRequest(
 
         @NotBlank String name,
         @Min(1) @NotNull int quantity,
