@@ -2,7 +2,7 @@ package com.listaai.list.adapter.inbound.web.response;
 
 import com.listaai.list.domain.enums.ItemUnit;
 
-public record ListItemResponse(
+public record ShoppingListItemResponse(
 
         Long id,
         String name,

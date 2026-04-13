@@ -1,6 +1,6 @@
 package com.listaai.list.adapter.inbound.web.response;
 
-public record ListParticipantResponse(
+public record ShoppingListParticipantResponse(
 
     String name,
     String phoneNumber
