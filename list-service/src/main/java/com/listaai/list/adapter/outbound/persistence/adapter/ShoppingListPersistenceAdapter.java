@@ -1,7 +1,7 @@
 package com.listaai.list.adapter.outbound.persistence.adapter;
 
 import com.listaai.list.adapter.outbound.persistence.entity.ShoppingListEntity;
-import com.listaai.list.adapter.outbound.persistence.mapper.ShoppingListMapper;
+import com.listaai.list.adapter.outbound.persistence.mapper.ShoppingListPersistenceMapper;
 import com.listaai.list.adapter.outbound.persistence.repository.ShoppingListJpaRepository;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.domain.model.ShoppingList;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ShoppingListPersistenceAdapter implements ShoppingListRepositoryPort {
 
-    private final ShoppingListMapper shoppingListMapper;
+    private final ShoppingListPersistenceMapper shoppingListMapper;
     private final ShoppingListJpaRepository shoppingListJpaRepository;
 
     @Override
