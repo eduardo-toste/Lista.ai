@@ -7,9 +7,15 @@ import jakarta.validation.constraints.NotNull;
 
 public record CreateShoppingListItemRequest(
 
-        @NotBlank String name,
-        @Min(1) @NotNull int quantity,
-        @NotNull ItemUnit unit
+        @NotBlank(message = "Item name must not be blank")
+        String name,
+
+        @Min(value = 1, message = "Item quantity must be at least 1")
+        @NotNull(message = "Item quantity must not be null")
+        int quantity,
+
+        @NotNull(message = "Item unit must not be null")
+        ItemUnit unit
 
 ) {
 }

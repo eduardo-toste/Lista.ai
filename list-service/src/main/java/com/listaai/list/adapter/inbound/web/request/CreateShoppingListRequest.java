@@ -8,9 +8,14 @@ import java.util.List;
 
 public record CreateShoppingListRequest(
 
-        @NotBlank String name,
-        @Valid @NotEmpty List<CreateShoppingListItemRequest> items,
-        @Valid List<CreateShoppingListParticipantRequest> participants
+        @NotBlank(message = "Shopping list name must not be blank")
+        String name,
+
+        @Valid
+        List<CreateShoppingListItemRequest> items,
+
+        @Valid
+        List<CreateShoppingListParticipantRequest> participants
 
 ) {
 }
