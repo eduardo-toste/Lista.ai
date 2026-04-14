@@ -23,7 +23,7 @@ public class ShoppingListEntity {
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShoppingListItemEntity> items;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "list_participants",
             joinColumns = @JoinColumn(name = "list_id"),
