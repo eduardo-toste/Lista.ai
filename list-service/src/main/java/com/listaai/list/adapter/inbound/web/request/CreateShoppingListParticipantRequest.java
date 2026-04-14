@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 public record CreateShoppingListParticipantRequest(
 
         @NotBlank String name,
-        @NotBlank String number
+        @NotBlank String phoneNumber
 
 ) {
 }

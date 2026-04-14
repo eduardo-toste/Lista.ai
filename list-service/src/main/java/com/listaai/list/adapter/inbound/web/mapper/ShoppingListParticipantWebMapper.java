@@ -12,7 +12,7 @@ public class ShoppingListParticipantWebMapper {
     public ShoppingListParticipantCommand toCommand(CreateShoppingListParticipantRequest request) {
         return new ShoppingListParticipantCommand(
                 request.name(),
-                request.number()
+                request.phoneNumber()
         );
     }
 
