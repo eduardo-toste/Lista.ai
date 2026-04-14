@@ -13,16 +13,16 @@ public class ShoppingListPersistenceMapper {
     private final ShoppingListParticipantPersistenceMapper shoppingListParticipantPersistenceMapper;
 
     public ShoppingListEntity toEntity(ShoppingList domain) {
-        return new ShoppingListEntity(
-                domain.getId(),
-                domain.getName(),
-                domain.getItems().stream()
+        return ShoppingListEntity.builder()
+                .id(domain.getId())
+                .name(domain.getName())
+                .items(domain.getItems().stream()
                         .map(shoppingListItemPersistenceMapper::toEntity)
-                        .toList(),
-                domain.getParticipants().stream()
+                        .toList())
+                .participants(domain.getParticipants().stream()
                         .map(shoppingListParticipantPersistenceMapper::toEntity)
-                        .toList()
-        );
+                        .toList())
+                .build();
     }
 
     public ShoppingList toDomain(ShoppingListEntity entity) {
