@@ -1,6 +1,6 @@
 package com.listaai.list.adapter.inbound.web.controller;
 
-import com.listaai.list.adapter.inbound.web.mapper.ShoppingListMapper;
+import com.listaai.list.adapter.inbound.web.mapper.ShoppingListWebMapper;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class ShoppingListController {
 
     private final CreateShoppingListUseCase createShoppingListUseCase;
-    private final ShoppingListMapper shoppingListMapper;
+    private final ShoppingListWebMapper shoppingListMapper;
 
     @PostMapping
     public ResponseEntity<ShoppingListResponse> createShoppingList(@RequestBody @Valid CreateShoppingListRequest request) {
