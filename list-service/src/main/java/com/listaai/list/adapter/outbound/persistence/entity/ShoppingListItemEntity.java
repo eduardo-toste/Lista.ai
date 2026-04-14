@@ -19,7 +19,10 @@ public class ShoppingListItemEntity {
 
     private String name;
     private int quantity;
+
+    @Enumerated(EnumType.STRING)
     private ItemUnit unit;
+
     private boolean purchased;
 
     @ManyToOne(fetch = FetchType.LAZY)
