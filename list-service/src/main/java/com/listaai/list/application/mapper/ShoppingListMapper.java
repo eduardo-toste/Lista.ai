@@ -1,17 +1,16 @@
 package com.listaai.list.application.mapper;
 
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
-import com.listaai.list.application.dto.input.ShoppingListItemCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.domain.model.ShoppingList;
-import com.listaai.list.domain.model.ShoppingListParticipant;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ShoppingListMapper {
 
-    private ShoppingListItemMapper shoppingListItemMapper;
-    private ShoppingListParticipantMapper shoppingListParticipantMapper;
+    private final ShoppingListItemMapper shoppingListItemMapper;
+    private final ShoppingListParticipantMapper shoppingListParticipantMapper;
 
     public ShoppingListMapper(ShoppingListItemMapper shoppingListItemMapper, ShoppingListParticipantMapper shoppingListParticipantMapper) {
         this.shoppingListItemMapper = shoppingListItemMapper;
@@ -23,10 +22,10 @@ public class ShoppingListMapper {
                 null,
                 command.name(),
                 command.items().stream()
-                        .map(item -> shoppingListItemMapper.toDomain(item))
+                        .map(shoppingListItemMapper::toDomain)
                         .toList(),
                 command.participants().stream()
-                        .map(participant -> shoppingListParticipantMapper.toDomain(participant))
+                        .map(shoppingListParticipantMapper::toDomain)
                         .toList()
         );
     }
@@ -36,12 +35,16 @@ public class ShoppingListMapper {
                 domain.getId(),
                 domain.getName(),
                 domain.getItems().stream()
-                        .map(item -> shoppingListItemMapper.toOutput(item))
+                        .map(shoppingListItemMapper::toOutput)
                         .toList(),
                 domain.getParticipants().stream()
-                        .map(participant -> shoppingListParticipantMapper.toOutput(participant))
+                        .map(shoppingListParticipantMapper::toOutput)
                         .toList()
         );
+    }
+
+    public Page<ShoppingListOutput> toPageOutput(Page<ShoppingList> page) {
+        return page.map(this::toOutput);
     }
 
 }
