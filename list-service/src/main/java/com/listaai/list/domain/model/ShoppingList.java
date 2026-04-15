@@ -25,6 +25,10 @@ public class ShoppingList {
         this.participants = participants != null ? participants : new ArrayList<>();
     }
 
+    public void updateListName(String name) {
+        this.name = name;
+    }
+
     public void addItem(ShoppingListItem item) {
         boolean itemAlreadyExists = this.items.stream()
                 .anyMatch(existingItem -> existingItem.getName().equalsIgnoreCase(item.getName()));
