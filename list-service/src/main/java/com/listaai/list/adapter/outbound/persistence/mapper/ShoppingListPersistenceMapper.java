@@ -4,6 +4,7 @@ import com.listaai.list.adapter.outbound.persistence.entity.ShoppingListEntity;
 import com.listaai.list.adapter.outbound.persistence.entity.ShoppingListItemEntity;
 import com.listaai.list.domain.model.ShoppingList;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -47,6 +48,10 @@ public class ShoppingListPersistenceMapper {
                         .map(shoppingListParticipantPersistenceMapper::toDomain)
                         .toList()
         );
+    }
+
+    public Page<ShoppingList> toPageDomain(Page<ShoppingListEntity> entityPage) {
+        return entityPage.map(this::toDomain);
     }
 
 }
