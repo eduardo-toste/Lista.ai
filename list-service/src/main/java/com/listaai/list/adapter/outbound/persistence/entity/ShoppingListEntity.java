@@ -3,7 +3,8 @@ package com.listaai.list.adapter.outbound.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "lists")
@@ -21,7 +22,7 @@ public class ShoppingListEntity {
     private String name;
 
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ShoppingListItemEntity> items;
+    private Set<ShoppingListItemEntity> items = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
@@ -29,6 +30,6 @@ public class ShoppingListEntity {
             joinColumns = @JoinColumn(name = "list_id"),
             inverseJoinColumns = @JoinColumn(name = "participant_id")
     )
-    private List<ShoppingListParticipantEntity> participants;
+    private Set<ShoppingListParticipantEntity> participants = new HashSet<>();
 
 }
