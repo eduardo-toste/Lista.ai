@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -19,9 +19,9 @@ public class ShoppingListPersistenceMapper {
     private final ShoppingListParticipantPersistenceMapper shoppingListParticipantPersistenceMapper;
 
     public ShoppingListEntity toEntity(ShoppingList domain) {
-        List<ShoppingListItemEntity> items = domain.getItems().stream()
+        Set<ShoppingListItemEntity> items = domain.getItems().stream()
                 .map(shoppingListItemPersistenceMapper::toEntity)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .collect(Collectors.toCollection(HashSet::new));
 
         ShoppingListEntity entity = ShoppingListEntity.builder()
                 .id(domain.getId())
@@ -29,7 +29,7 @@ public class ShoppingListPersistenceMapper {
                 .items(items)
                 .participants(domain.getParticipants().stream()
                         .map(shoppingListParticipantPersistenceMapper::toEntity)
-                        .toList())
+                        .collect(Collectors.toCollection(HashSet::new)))
                 .build();
 
         entity.getItems().forEach(item -> item.setShoppingList(entity));
