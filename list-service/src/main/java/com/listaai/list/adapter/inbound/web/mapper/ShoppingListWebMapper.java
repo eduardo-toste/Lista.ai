@@ -4,6 +4,7 @@ import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -40,6 +41,10 @@ public class ShoppingListWebMapper {
                         .map(shoppingListParticipantWebMapper::toResponse)
                         .toList()
         );
+    }
+
+    public Page<ShoppingListResponse> toPageResponse(Page<ShoppingListOutput> pageOutput) {
+        return pageOutput.map(this::toResponse);
     }
 
 }
