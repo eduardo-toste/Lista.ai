@@ -13,4 +13,6 @@ public interface ShoppingListRepositoryPort {
     Optional<ShoppingList> findById(Long id);
     Page<ShoppingList> findAll(Pageable pageable);
 
+    void deleteById(Long id);
+
 }
