@@ -5,9 +5,9 @@ import com.listaai.list.application.port.inbound.CreateShoppingListUseCase;
 import com.listaai.list.application.port.inbound.GetShoppingListUseCase;
 import com.listaai.list.application.port.inbound.UpdateListNameUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
-import com.listaai.list.application.usecase.CreateShoppingListService;
-import com.listaai.list.application.usecase.GetShoppingListService;
-import com.listaai.list.application.usecase.UpdateListNameService;
+import com.listaai.list.application.usecase.lists.CreateShoppingListService;
+import com.listaai.list.application.usecase.lists.GetShoppingListService;
+import com.listaai.list.application.usecase.lists.UpdateListNameService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

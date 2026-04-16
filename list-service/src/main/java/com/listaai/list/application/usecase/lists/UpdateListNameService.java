@@ -1,4 +1,4 @@
-package com.listaai.list.application.usecase;
+package com.listaai.list.application.usecase.lists;
 
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.exception.ShoppingListNotFoundException;
