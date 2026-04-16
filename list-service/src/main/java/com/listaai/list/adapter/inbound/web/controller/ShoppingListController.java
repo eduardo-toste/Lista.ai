@@ -6,9 +6,9 @@ import com.listaai.list.adapter.inbound.web.request.UpdateShoppingListNameReques
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
-import com.listaai.list.application.port.inbound.CreateShoppingListUseCase;
-import com.listaai.list.application.port.inbound.GetShoppingListUseCase;
-import com.listaai.list.application.port.inbound.UpdateListNameUseCase;
+import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

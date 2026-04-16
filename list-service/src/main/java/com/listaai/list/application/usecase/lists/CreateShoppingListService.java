@@ -3,7 +3,7 @@ package com.listaai.list.application.usecase.lists;
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.mapper.ShoppingListMapper;
-import com.listaai.list.application.port.inbound.CreateShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.domain.model.ShoppingList;
 

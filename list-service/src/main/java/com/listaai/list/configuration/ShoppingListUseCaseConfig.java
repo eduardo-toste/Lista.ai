@@ -1,9 +1,9 @@
 package com.listaai.list.configuration;
 
 import com.listaai.list.application.mapper.ShoppingListMapper;
-import com.listaai.list.application.port.inbound.CreateShoppingListUseCase;
-import com.listaai.list.application.port.inbound.GetShoppingListUseCase;
-import com.listaai.list.application.port.inbound.UpdateListNameUseCase;
+import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.application.usecase.lists.CreateShoppingListService;
 import com.listaai.list.application.usecase.lists.GetShoppingListService;

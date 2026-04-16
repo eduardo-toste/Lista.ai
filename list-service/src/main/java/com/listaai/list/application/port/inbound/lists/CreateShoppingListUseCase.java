@@ -1,4 +1,4 @@
-package com.listaai.list.application.port.inbound;
+package com.listaai.list.application.port.inbound.lists;
 
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;

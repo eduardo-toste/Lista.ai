@@ -3,7 +3,7 @@ package com.listaai.list.application.usecase.lists;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
-import com.listaai.list.application.port.inbound.GetShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.domain.model.ShoppingList;
 import org.springframework.data.domain.Page;
