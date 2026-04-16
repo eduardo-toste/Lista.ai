@@ -5,6 +5,7 @@ import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
+import com.listaai.list.application.utils.ShoppingListUtils;
 import com.listaai.list.domain.model.ShoppingList;
 
 public class UpdateListNameService implements UpdateListNameUseCase {
@@ -19,8 +20,7 @@ public class UpdateListNameService implements UpdateListNameUseCase {
 
     @Override
     public ShoppingListOutput updateName(Long id, String name) {
-        ShoppingList shoppingList = shoppingListRepositoryPort.findById(id)
-                .orElseThrow(ShoppingListNotFoundException::new);
+        ShoppingList shoppingList = ShoppingListUtils.findListOrThrow(shoppingListRepositoryPort, id);
 
         shoppingList.updateListName(name);
         ShoppingList savedShoppingList =  shoppingListRepositoryPort.save(shoppingList);

@@ -7,6 +7,7 @@ import com.listaai.list.application.mapper.ShoppingListItemMapper;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.items.AddItemToListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
+import com.listaai.list.application.utils.ShoppingListUtils;
 import com.listaai.list.domain.model.ShoppingList;
 import com.listaai.list.domain.model.ShoppingListItem;
 
@@ -24,9 +25,7 @@ public class AddItemToListService implements AddItemToListUseCase {
 
     @Override
     public ShoppingListOutput addItemToShoppingList(Long listId, ShoppingListItemCommand command) {
-        ShoppingList shoppingList = shoppingListRepositoryPort.findById(listId)
-                .orElseThrow(ShoppingListNotFoundException::new);
-
+        ShoppingList shoppingList = ShoppingListUtils.findListOrThrow(shoppingListRepositoryPort, listId);
         ShoppingListItem item = shoppingListItemMapper.toDomain(command);
 
         shoppingList.addItem(item);

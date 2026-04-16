@@ -5,6 +5,7 @@ import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
+import com.listaai.list.application.utils.ShoppingListUtils;
 import com.listaai.list.domain.model.ShoppingList;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +22,13 @@ public class GetShoppingListService implements GetShoppingListUseCase {
 
     @Override
     public ShoppingListOutput getShoppingListById(Long id) {
-        ShoppingList savedShoppingList = shoppingListRepositoryPort.findById(id)
-                .orElseThrow(ShoppingListNotFoundException::new);
-
+        ShoppingList savedShoppingList = ShoppingListUtils.findListOrThrow(shoppingListRepositoryPort, id);
         return shoppingListMapper.toOutput(savedShoppingList);
     }
 
     @Override
     public Page<ShoppingListOutput> getShoppingLists(Pageable pageable) {
         Page<ShoppingList> shoppingLists = shoppingListRepositoryPort.findAll(pageable);
-
         return shoppingListMapper.toPageOutput(shoppingLists);
     }
 }

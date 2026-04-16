@@ -7,6 +7,7 @@ import com.listaai.list.application.mapper.ShoppingListItemMapper;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.items.RemoveItemFromListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
+import com.listaai.list.application.utils.ShoppingListUtils;
 import com.listaai.list.domain.model.ShoppingList;
 
 public class RemoveItemFromListService implements RemoveItemFromListUseCase {
@@ -21,8 +22,7 @@ public class RemoveItemFromListService implements RemoveItemFromListUseCase {
 
     @Override
     public ShoppingListOutput removeItemFromShoppingList(Long listId, Long itemId) {
-        ShoppingList shoppingList = shoppingListRepositoryPort.findById(listId)
-                .orElseThrow(ShoppingListNotFoundException::new);
+        ShoppingList shoppingList = ShoppingListUtils.findListOrThrow(shoppingListRepositoryPort, listId);
 
         shoppingList.removeItem(itemId);
         ShoppingList savedList = shoppingListRepositoryPort.save(shoppingList);

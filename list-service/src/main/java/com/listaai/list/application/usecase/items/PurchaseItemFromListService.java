@@ -7,6 +7,7 @@ import com.listaai.list.application.mapper.ShoppingListItemMapper;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.items.PurchaseItemFromListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
+import com.listaai.list.application.utils.ShoppingListUtils;
 import com.listaai.list.domain.model.ShoppingList;
 
 public class PurchaseItemFromListService implements PurchaseItemFromListUseCase {
@@ -21,8 +22,7 @@ public class PurchaseItemFromListService implements PurchaseItemFromListUseCase 
 
     @Override
     public ShoppingListOutput purchaseItemFromList(Long listId, Long itemId, boolean purchased) {
-        ShoppingList shoppingList = shoppingListRepositoryPort.findById(listId)
-                .orElseThrow(ShoppingListNotFoundException::new);
+        ShoppingList shoppingList = ShoppingListUtils.findListOrThrow(shoppingListRepositoryPort, listId);
 
         if (purchased) {
             shoppingList.markItemAsPurchased(itemId);
