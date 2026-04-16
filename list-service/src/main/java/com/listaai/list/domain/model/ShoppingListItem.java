@@ -26,10 +26,10 @@ public class ShoppingListItem {
         this.purchased = false;
     }
 
-    public void update(String name, int quantity, ItemUnit unit) {
-        this.name = name;
-        this.quantity = quantity;
-        this.unit = unit;
+    public void update(String name, Integer quantity, ItemUnit unit) {
+        if (name != null) this.name = name;
+        if (quantity != null) this.quantity = quantity;
+        if (unit != null) this.unit = unit;
     }
 
     public void markAsPurchased() {
