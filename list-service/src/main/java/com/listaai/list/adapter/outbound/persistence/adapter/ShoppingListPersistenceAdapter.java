@@ -39,4 +39,9 @@ public class ShoppingListPersistenceAdapter implements ShoppingListRepositoryPor
         return shoppingListMapper.toPageDomain(entityPage);
     }
 
+    @Override
+    public void deleteById(Long id) {
+        shoppingListJpaRepository.deleteById(id);
+    }
+
 }
