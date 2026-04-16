@@ -72,6 +72,11 @@ public class ShoppingList {
         this.participants.add(participant);
     }
 
+    public void updateParticipant(Long participantId, String name, String phoneNumber) {
+        ShoppingListParticipant participant = findParticipantById(participantId);
+        participant.update(name, phoneNumber);
+    }
+
     public void removeParticipant(Long participantId) {
         ShoppingListParticipant participant = findParticipantById(participantId);
         this.participants.remove(participant);
