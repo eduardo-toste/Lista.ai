@@ -13,12 +13,10 @@ public class RemoveItemFromListService implements RemoveItemFromListUseCase {
 
     private final ShoppingListRepositoryPort shoppingListRepositoryPort;
     private final ShoppingListMapper shoppingListMapper;
-    private final ShoppingListItemMapper shoppingListItemMapper;
 
-    public RemoveItemFromListService(ShoppingListRepositoryPort shoppingListRepositoryPort, ShoppingListMapper shoppingListMapper, ShoppingListItemMapper shoppingListItemMapper) {
+    public RemoveItemFromListService(ShoppingListRepositoryPort shoppingListRepositoryPort, ShoppingListMapper shoppingListMapper) {
         this.shoppingListRepositoryPort = shoppingListRepositoryPort;
         this.shoppingListMapper = shoppingListMapper;
-        this.shoppingListItemMapper = shoppingListItemMapper;
     }
 
     @Override
