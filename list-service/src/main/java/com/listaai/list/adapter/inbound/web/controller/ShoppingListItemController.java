@@ -6,6 +6,8 @@ import com.listaai.list.adapter.inbound.web.request.CreateShoppingListItemReques
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.port.inbound.items.AddItemToListUseCase;
+import com.listaai.list.application.port.inbound.items.RemoveItemFromListUseCase;
+import com.listaai.list.domain.model.ShoppingList;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +18,20 @@ import org.springframework.web.bind.annotation.*;
 public class ShoppingListItemController {
 
     private final AddItemToListUseCase addItemToListUseCase;
+    private final RemoveItemFromListUseCase removeItemFromListUseCase;
     private final ShoppingListItemWebMapper shoppingListItemWebMapper;
     private final ShoppingListWebMapper shoppingListWebMapper;
 
     @PostMapping
     public ResponseEntity<ShoppingListResponse> addItemToList(@PathVariable Long listId, @RequestBody CreateShoppingListItemRequest itemRequest) {
         ShoppingListOutput output = addItemToListUseCase.addItemToShoppingList(listId, shoppingListItemWebMapper.toCommand(itemRequest));
+        ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("{itemId}")
+    public ResponseEntity<ShoppingListResponse> removeItemFromList(@PathVariable Long listId, @PathVariable Long itemId) {
+        ShoppingListOutput output = removeItemFromListUseCase.removeItemFromShoppingList(listId, itemId);
         ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }
