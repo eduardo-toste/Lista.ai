@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,10 +44,10 @@ public class ShoppingListPersistenceMapper {
                 entity.getName(),
                 entity.getItems().stream()
                         .map(shoppingListItemPersistenceMapper::toDomain)
-                        .toList(),
+                        .collect(Collectors.toCollection(ArrayList::new)),
                 entity.getParticipants().stream()
                         .map(shoppingListParticipantPersistenceMapper::toDomain)
-                        .toList()
+                        .collect(Collectors.toCollection(ArrayList::new))
         );
     }
 
