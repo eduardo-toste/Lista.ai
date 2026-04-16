@@ -7,6 +7,7 @@ import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.CreateShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.DeleteShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
 import jakarta.validation.Valid;
@@ -24,6 +25,7 @@ public class ShoppingListController {
     private final CreateShoppingListUseCase createShoppingListUseCase;
     private final GetShoppingListUseCase getShoppingListUseCase;
     private final UpdateListNameUseCase updateListNameUseCase;
+    private final DeleteShoppingListUseCase deleteShoppingListUseCase;
     private final ShoppingListWebMapper shoppingListMapper;
 
     @PostMapping
@@ -54,4 +56,11 @@ public class ShoppingListController {
         ShoppingListResponse response = shoppingListMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteShoppingList(@PathVariable Long id) {
+        deleteShoppingListUseCase.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
 }
