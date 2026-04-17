@@ -63,7 +63,7 @@ public class ShoppingList {
     public void addParticipant(ShoppingListParticipant participant) {
         boolean participantAlreadyExists = this.participants.stream()
                 .anyMatch(existingParticipant ->
-                        existingParticipant.getPhoneNumber().equals(participant.getPhoneNumber()));
+                        participant.getPhoneNumber().equals(existingParticipant.getPhoneNumber()));
 
         if (participantAlreadyExists) {
             throw new ParticipantAlreadyAddedException();
