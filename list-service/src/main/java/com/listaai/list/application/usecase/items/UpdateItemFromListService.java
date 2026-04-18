@@ -2,7 +2,6 @@ package com.listaai.list.application.usecase.items;
 
 import com.listaai.list.application.dto.input.ShoppingListItemCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
-import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.items.UpdateItemFromListUseCase;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
