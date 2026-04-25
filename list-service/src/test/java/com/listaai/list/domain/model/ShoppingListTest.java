@@ -13,7 +13,11 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShoppingListTest {
 
@@ -25,7 +29,7 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldCreateShoppingListSuccessfullyWhenItemsAndParticipantsAreNull() {
+    void shouldCreateShoppingListWithEmptyCollectionsWhenItemsAndParticipantsAreNull() {
         assertEquals(1L, shoppingList.getId());
         assertEquals("Lista teste", shoppingList.getName());
         assertEquals(List.of(), shoppingList.getItems());
@@ -33,12 +37,13 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldCreateShoppingListSuccessfullyWhenItemsAndParticipantsExists() {
+    void shouldCreateShoppingListWithProvidedItemsAndParticipants() {
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 List.of(new ShoppingListItem(1L, "Item", 1, ItemUnit.UN, true)),
-                List.of(new ShoppingListParticipant(1L, "Eduardo", "11999998888")));
+                List.of(new ShoppingListParticipant(1L, "Eduardo", "11999998888"))
+        );
 
         assertEquals(1L, shoppingList.getId());
         assertEquals("Lista teste", shoppingList.getName());
@@ -49,65 +54,93 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldUpdateListNameSuccessfully() {
+    void shouldUpdateListName() {
         shoppingList.updateListName("Novo nome de lista");
+
         assertEquals("Novo nome de lista", shoppingList.getName());
     }
 
     @Test
-    void shouldAddItemToListSuccessfully() {
+    void shouldAddItemToList() {
         ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN);
+
         shoppingList.addItem(item);
 
-        assertEquals(1L, shoppingList.getItems().getFirst().getId());
-        assertEquals("Item", shoppingList.getItems().getFirst().getName());
+        assertEquals(1, shoppingList.getItems().size());
+        assertEquals(item, shoppingList.getItems().getFirst());
     }
 
     @Test
-    void shouldNotAddItemToListWhenItemAlreadyExists() {
+    void shouldThrowWhenAddingAnItemThatAlreadyExists() {
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 List.of(new ShoppingListItem(1L, "Item", 1, ItemUnit.UN, true)),
-                null);
+                null
+        );
         ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN);
 
-        RuntimeException ex = assertThrows(ItemAlreadyAddedException.class,
-                () -> shoppingList.addItem(item));
+        ItemAlreadyAddedException exception = assertThrows(
+                ItemAlreadyAddedException.class,
+                () -> shoppingList.addItem(item)
+        );
 
-        assertEquals("Item already exists", ex.getMessage());
+        assertEquals("Item already exists", exception.getMessage());
     }
 
     @Test
-    void shouldRemoveItemFromListSuccessfully() {
+    void shouldThrowWhenAddingAnItemThatAlreadyExistsWithDifferentCasing() {
+        shoppingList = new ShoppingList(
+                1L,
+                "Lista teste",
+                new ArrayList<>(List.of(new ShoppingListItem(1L, "Item", 1, ItemUnit.UN, false))),
+                new ArrayList<>()
+        );
+        ShoppingListItem item = new ShoppingListItem(2L, "ITEM", 1, ItemUnit.UN);
+
+        ItemAlreadyAddedException exception = assertThrows(
+                ItemAlreadyAddedException.class,
+                () -> shoppingList.addItem(item)
+        );
+
+        assertEquals("Item already exists", exception.getMessage());
+    }
+
+    @Test
+    void shouldRemoveItemFromList() {
         ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN);
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(List.of(item)),
-                new ArrayList<>());
+                new ArrayList<>()
+        );
 
         shoppingList.removeItem(1L);
 
+        assertTrue(shoppingList.getItems().isEmpty());
         assertFalse(shoppingList.getItems().contains(item));
     }
 
     @Test
-    void shouldNotRemoveItemFromListWhenItemDoNotExists() {
-        RuntimeException ex = assertThrows(ItemNotFoundException.class,
-                () -> shoppingList.removeItem(1L));
+    void shouldThrowWhenRemovingAnItemThatDoesNotExist() {
+        ItemNotFoundException exception = assertThrows(
+                ItemNotFoundException.class,
+                () -> shoppingList.removeItem(1L)
+        );
 
-        assertEquals("Item not found", ex.getMessage());
+        assertEquals("Item not found", exception.getMessage());
     }
 
     @Test
-    void shouldUpdateItemFromListSuccessfully() {
+    void shouldUpdateItemFromList() {
         ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN);
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(List.of(item)),
-                new ArrayList<>());
+                new ArrayList<>()
+        );
 
         shoppingList.updateItem(1L, "Novo nome", 100, ItemUnit.G);
 
@@ -117,36 +150,24 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldNotUpdateItemFromListWhenItemDoNotExists() {
-        RuntimeException ex = assertThrows(ItemNotFoundException.class,
-                () -> shoppingList.updateItem(1L, "Novo nome", 100, ItemUnit.UN));
+    void shouldThrowWhenUpdatingAnItemThatDoesNotExist() {
+        ItemNotFoundException exception = assertThrows(
+                ItemNotFoundException.class,
+                () -> shoppingList.updateItem(1L, "Novo nome", 100, ItemUnit.UN)
+        );
 
-        assertEquals("Item not found", ex.getMessage());
+        assertEquals("Item not found", exception.getMessage());
     }
 
     @Test
-    void shouldNotAddItemToListWhenItemAlreadyExistsWithDifferentCasing() {
-        shoppingList = new ShoppingList(
-                1L,
-                "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItem(1L, "Item", 1, ItemUnit.UN, false))),
-                new ArrayList<>());
-        ShoppingListItem item = new ShoppingListItem(2L, "ITEM", 1, ItemUnit.UN);
-
-        RuntimeException ex = assertThrows(ItemAlreadyAddedException.class,
-                () -> shoppingList.addItem(item));
-
-        assertEquals("Item already exists", ex.getMessage());
-    }
-
-    @Test
-    void shouldMarkItemAsPurchasedSuccessfully() {
+    void shouldMarkItemAsPurchased() {
         ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN, false);
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(List.of(item)),
-                new ArrayList<>());
+                new ArrayList<>()
+        );
 
         shoppingList.markItemAsPurchased(1L);
 
@@ -154,21 +175,24 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldNotMarkItemAsPurchasedWhenItemDoNotExists() {
-        RuntimeException ex = assertThrows(ItemNotFoundException.class,
-                () -> shoppingList.markItemAsPurchased(99L));
+    void shouldThrowWhenMarkingAnItemAsPurchasedThatDoesNotExist() {
+        ItemNotFoundException exception = assertThrows(
+                ItemNotFoundException.class,
+                () -> shoppingList.markItemAsPurchased(99L)
+        );
 
-        assertEquals("Item not found", ex.getMessage());
+        assertEquals("Item not found", exception.getMessage());
     }
 
     @Test
-    void shouldUnmarkItemAsPurchasedSuccessfully() {
+    void shouldUnmarkItemAsPurchased() {
         ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN, true);
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(List.of(item)),
-                new ArrayList<>());
+                new ArrayList<>()
+        );
 
         shoppingList.unmarkItemAsPurchased(1L);
 
@@ -176,68 +200,78 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldNotUnmarkItemAsPurchasedWhenItemDoNotExists() {
-        RuntimeException ex = assertThrows(ItemNotFoundException.class,
-                () -> shoppingList.unmarkItemAsPurchased(99L));
+    void shouldThrowWhenUnmarkingAnItemAsPurchasedThatDoesNotExist() {
+        ItemNotFoundException exception = assertThrows(
+                ItemNotFoundException.class,
+                () -> shoppingList.unmarkItemAsPurchased(99L)
+        );
 
-        assertEquals("Item not found", ex.getMessage());
+        assertEquals("Item not found", exception.getMessage());
     }
 
     @Test
-    void shouldAddParticipantToListSuccessfully() {
+    void shouldAddParticipantToList() {
         ShoppingListParticipant participant = new ShoppingListParticipant(1L, "Eduardo", "11999998888");
+
         shoppingList.addParticipant(participant);
 
         assertEquals(1, shoppingList.getParticipants().size());
-        assertEquals("Eduardo", shoppingList.getParticipants().getFirst().getName());
-        assertEquals("11999998888", shoppingList.getParticipants().getFirst().getPhoneNumber());
+        assertEquals(participant, shoppingList.getParticipants().getFirst());
     }
 
     @Test
-    void shouldNotAddParticipantToListWhenParticipantAlreadyExists() {
+    void shouldThrowWhenAddingAParticipantThatAlreadyExists() {
         ShoppingListParticipant participant = new ShoppingListParticipant(1L, "Eduardo", "11999998888");
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(),
-                new ArrayList<>(List.of(participant)));
+                new ArrayList<>(List.of(participant))
+        );
 
-        RuntimeException ex = assertThrows(ParticipantAlreadyAddedException.class,
-                () -> shoppingList.addParticipant(new ShoppingListParticipant(2L, "Outro", "11999998888")));
+        ParticipantAlreadyAddedException exception = assertThrows(
+                ParticipantAlreadyAddedException.class,
+                () -> shoppingList.addParticipant(new ShoppingListParticipant(2L, "Outro", "11999998888"))
+        );
 
-        assertEquals("Participant already exists", ex.getMessage());
+        assertEquals("Participant already exists", exception.getMessage());
     }
 
     @Test
-    void shouldRemoveParticipantFromListSuccessfully() {
+    void shouldRemoveParticipantFromList() {
         ShoppingListParticipant participant = new ShoppingListParticipant(1L, "Eduardo", "11999998888");
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(),
-                new ArrayList<>(List.of(participant)));
+                new ArrayList<>(List.of(participant))
+        );
 
         shoppingList.removeParticipant(1L);
 
+        assertTrue(shoppingList.getParticipants().isEmpty());
         assertFalse(shoppingList.getParticipants().contains(participant));
     }
 
     @Test
-    void shouldNotRemoveParticipantFromListWhenParticipantDoNotExists() {
-        RuntimeException ex = assertThrows(ParticipantNotFoundException.class,
-                () -> shoppingList.removeParticipant(99L));
+    void shouldThrowWhenRemovingAParticipantThatDoesNotExist() {
+        ParticipantNotFoundException exception = assertThrows(
+                ParticipantNotFoundException.class,
+                () -> shoppingList.removeParticipant(99L)
+        );
 
-        assertEquals("Participant not found", ex.getMessage());
+        assertEquals("Participant not found", exception.getMessage());
     }
 
     @Test
-    void shouldUpdateParticipantFromListSuccessfully() {
+    void shouldUpdateParticipantFromList() {
         ShoppingListParticipant participant = new ShoppingListParticipant(1L, "Eduardo", "11999998888");
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(),
-                new ArrayList<>(List.of(participant)));
+                new ArrayList<>(List.of(participant))
+        );
 
         shoppingList.updateParticipant(1L, "Novo nome", "11988887777");
 
@@ -246,50 +280,59 @@ class ShoppingListTest {
     }
 
     @Test
-    void shouldNotUpdateParticipantFromListWhenParticipantDoNotExists() {
-        RuntimeException ex = assertThrows(ParticipantNotFoundException.class,
-                () -> shoppingList.updateParticipant(99L, "Novo nome", "11988887777"));
+    void shouldThrowWhenUpdatingAParticipantThatDoesNotExist() {
+        ParticipantNotFoundException exception = assertThrows(
+                ParticipantNotFoundException.class,
+                () -> shoppingList.updateParticipant(99L, "Novo nome", "11988887777")
+        );
 
-        assertEquals("Participant not found", ex.getMessage());
+        assertEquals("Participant not found", exception.getMessage());
     }
 
     @Test
-    void shouldShareListSuccessfully() {
+    void shouldAllowListToBeSharedWhenItHasItemsAndParticipants() {
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(List.of(new ShoppingListItem(1L, "Item", 1, ItemUnit.UN))),
-                new ArrayList<>(List.of(new ShoppingListParticipant(1L, "Eduardo", "11999998888"))));
+                new ArrayList<>(List.of(new ShoppingListParticipant(1L, "Eduardo", "11999998888")))
+        );
 
         assertDoesNotThrow(() -> shoppingList.validateCanBeShared());
     }
 
     @Test
-    void shouldNotShareListWhenItemsIsEmpty() {
+    void shouldThrowWhenSharingAListWithoutItems() {
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(),
-                new ArrayList<>(List.of(new ShoppingListParticipant(1L, "Eduardo", "11999998888"))));
+                new ArrayList<>(List.of(new ShoppingListParticipant(1L, "Eduardo", "11999998888")))
+        );
 
-        RuntimeException ex = assertThrows(EmptyShoppingListCannotBeSharedException.class,
-                () -> shoppingList.validateCanBeShared());
+        EmptyShoppingListCannotBeSharedException exception = assertThrows(
+                EmptyShoppingListCannotBeSharedException.class,
+                shoppingList::validateCanBeShared
+        );
 
-        assertEquals("Empty list can't be shared", ex.getMessage());
+        assertEquals("Empty list can't be shared", exception.getMessage());
     }
 
     @Test
-    void shouldNotShareListWhenParticipantsIsEmpty() {
+    void shouldThrowWhenSharingAListWithoutParticipants() {
         shoppingList = new ShoppingList(
                 1L,
                 "Lista teste",
                 new ArrayList<>(List.of(new ShoppingListItem(1L, "Item", 1, ItemUnit.UN))),
-                new ArrayList<>());
+                new ArrayList<>()
+        );
 
-        RuntimeException ex = assertThrows(ShoppingListWithoutParticipantsCannotBeSharedException.class,
-                () -> shoppingList.validateCanBeShared());
+        ShoppingListWithoutParticipantsCannotBeSharedException exception = assertThrows(
+                ShoppingListWithoutParticipantsCannotBeSharedException.class,
+                shoppingList::validateCanBeShared
+        );
 
-        assertEquals("List without participants can't be shared", ex.getMessage());
+        assertEquals("List without participants can't be shared", exception.getMessage());
     }
 
 }

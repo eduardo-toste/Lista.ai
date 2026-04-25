@@ -1,12 +1,12 @@
 package com.listaai.list.domain.model;
 
 import com.listaai.list.domain.enums.ItemUnit;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShoppingListItemTest {
 
@@ -23,63 +23,74 @@ class ShoppingListItemTest {
         assertEquals("Item", item.getName());
         assertEquals(1, item.getQuantity());
         assertEquals(ItemUnit.UN, item.getUnit());
-        assertEquals(true, item.isPurchased());
+        assertTrue(item.isPurchased());
     }
 
     @Test
-    void shouldCreateItemWithoutPurchasedFieldSuccessfully(){
-        ShoppingListItem item = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN);
+    void shouldCreateItemWithPurchasedDefaultingToFalse() {
+        ShoppingListItem result = new ShoppingListItem(1L, "Item", 1, ItemUnit.UN);
 
-        assertEquals(1L, item.getId());
-        assertEquals("Item", item.getName());
-        assertEquals(1, item.getQuantity());
-        assertEquals(ItemUnit.UN, item.getUnit());
-        assertEquals(false, item.isPurchased());
+        assertEquals(1L, result.getId());
+        assertEquals("Item", result.getName());
+        assertEquals(1, result.getQuantity());
+        assertEquals(ItemUnit.UN, result.getUnit());
+        assertFalse(result.isPurchased());
     }
 
     @Test
-    void shouldUpdateItemNameSuccessfully() {
+    void shouldUpdateOnlyItemNameWhenOtherFieldsAreNull() {
         item.update("New Item", null, null);
+
         assertEquals("New Item", item.getName());
         assertEquals(1, item.getQuantity());
         assertEquals(ItemUnit.UN, item.getUnit());
+        assertTrue(item.isPurchased());
     }
 
     @Test
-    void shouldUpdateItemQuantitySuccessfully() {
+    void shouldUpdateOnlyItemQuantityWhenOtherFieldsAreNull() {
         item.update(null, 5, null);
+
         assertEquals("Item", item.getName());
         assertEquals(5, item.getQuantity());
+        assertEquals(ItemUnit.UN, item.getUnit());
+        assertTrue(item.isPurchased());
     }
 
     @Test
-    void shouldUpdateAllFieldsSuccessfully() {
+    void shouldUpdateAllMutableFields() {
         item.update("New Item", 5, ItemUnit.KG);
+
         assertEquals("New Item", item.getName());
         assertEquals(5, item.getQuantity());
         assertEquals(ItemUnit.KG, item.getUnit());
+        assertTrue(item.isPurchased());
     }
 
     @Test
-    void shouldNotUpdateItemWhenAllFieldsAreNull() {
+    void shouldKeepItemUnchangedWhenAllUpdateFieldsAreNull() {
         item.update(null, null, null);
+
         assertEquals("Item", item.getName());
         assertEquals(1, item.getQuantity());
         assertEquals(ItemUnit.UN, item.getUnit());
+        assertTrue(item.isPurchased());
     }
 
     @Test
-    void shouldMarkItemAsPurchasedSuccesfully() {
-        item.markAsPurchased();
-
-        assertEquals(true, item.isPurchased());
-    }
-
-    @Test
-    void shouldUnmarkItemAsPurchasedSuccesfully() {
+    void shouldMarkItemAsPurchased() {
         item.unmarkAsPurchased();
 
-        assertEquals(false, item.isPurchased());
+        item.markAsPurchased();
+
+        assertTrue(item.isPurchased());
+    }
+
+    @Test
+    void shouldUnmarkItemAsPurchased() {
+        item.unmarkAsPurchased();
+
+        assertFalse(item.isPurchased());
     }
 
 }

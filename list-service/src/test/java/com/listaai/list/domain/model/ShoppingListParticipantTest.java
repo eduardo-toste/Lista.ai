@@ -3,7 +3,7 @@ package com.listaai.list.domain.model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShoppingListParticipantTest {
 
@@ -22,30 +22,31 @@ class ShoppingListParticipantTest {
     }
 
     @Test
-    void shouldUpdateParticipantNameSuccessfully() {
+    void shouldUpdateOnlyParticipantNameWhenPhoneNumberIsNull() {
         participant.update("Lucas", null);
 
         assertEquals("Lucas", participant.getName());
+        assertEquals("11999998888", participant.getPhoneNumber());
     }
 
     @Test
-    void shouldUpdateParticipantPhoneNumberSuccessfully() {
+    void shouldUpdateOnlyParticipantPhoneNumberWhenNameIsNull() {
         participant.update(null, "11111111111");
 
+        assertEquals("Eduardo", participant.getName());
         assertEquals("11111111111", participant.getPhoneNumber());
     }
 
     @Test
-    void shouldUpdateFullParticipantSuccessfully() {
+    void shouldUpdateParticipantNameAndPhoneNumber() {
         participant.update("Lucas", "11111111111");
 
         assertEquals("Lucas", participant.getName());
         assertEquals("11111111111", participant.getPhoneNumber());
-
     }
 
     @Test
-    void shouldNotUpdateParticipantWhenBothFieldsAreNull() {
+    void shouldKeepParticipantUnchangedWhenAllUpdateFieldsAreNull() {
         participant.update(null, null);
 
         assertEquals("Eduardo", participant.getName());
