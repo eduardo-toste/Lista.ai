@@ -19,6 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShoppingListMapperTest {
 
@@ -74,7 +75,7 @@ class ShoppingListMapperTest {
         assertEquals("Arroz", result.items().getFirst().name());
         assertEquals(2, result.items().getFirst().quantity());
         assertEquals(ItemUnit.KG, result.items().getFirst().unit());
-        assertEquals(true, result.items().getFirst().purchased());
+        assertTrue(result.items().getFirst().purchased());
         assertEquals(1, result.participants().size());
         assertEquals(20L, result.participants().getFirst().id());
         assertEquals("Eduardo", result.participants().getFirst().name());
@@ -108,7 +109,7 @@ class ShoppingListMapperTest {
         assertEquals("Lista 1", result.getContent().get(0).name());
         assertEquals("Arroz", result.getContent().get(0).items().getFirst().name());
         assertEquals("Lista 2", result.getContent().get(1).name());
-        assertEquals(true, result.getContent().get(1).items().getFirst().purchased());
+        assertTrue(result.getContent().get(1).items().getFirst().purchased());
         assertEquals("Maria", result.getContent().get(1).participants().getFirst().name());
     }
 

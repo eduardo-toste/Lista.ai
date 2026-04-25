@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShoppingListItemMapperTest {
 
@@ -43,7 +44,7 @@ class ShoppingListItemMapperTest {
         assertEquals("Arroz", result.name());
         assertEquals(2, result.quantity());
         assertEquals(ItemUnit.KG, result.unit());
-        assertEquals(true, result.purchased());
+        assertTrue(result.purchased());
     }
 
 }
