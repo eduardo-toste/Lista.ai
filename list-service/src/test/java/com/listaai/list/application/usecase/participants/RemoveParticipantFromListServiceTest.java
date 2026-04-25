@@ -1,10 +1,8 @@
 package com.listaai.list.application.usecase.participants;
 
-import com.listaai.list.application.dto.input.ShoppingListParticipantCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
-import com.listaai.list.application.dto.output.ShoppingListParticipantOutput;
+import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
-import com.listaai.list.application.mapper.ShoppingListParticipantMapper;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.domain.exception.participant.ParticipantNotFoundException;
 import com.listaai.list.domain.model.ShoppingList;
@@ -20,9 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RemoveParticipantFromListServiceTest {
@@ -34,96 +36,71 @@ class RemoveParticipantFromListServiceTest {
     private ShoppingListMapper shoppingListMapper;
 
     @InjectMocks
-    private RemoveParticipantFromListService removeParticipantFromListService ;
+    private RemoveParticipantFromListService removeParticipantFromListService;
 
-    private Long listId = 1L;
-    private Long participantId = 1L;
+    private final Long listId = 1L;
+    private final Long participantId = 1L;
 
     private ShoppingList shoppingList;
     private ShoppingList savedShoppingList;
-    private ShoppingListParticipant shoppingListParticipant;
-    private ShoppingListParticipantOutput shoppingListParticipantOutput;
     private ShoppingListOutput shoppingListOutput;
 
     @BeforeEach
     void setUp() {
-        shoppingListParticipant = new ShoppingListParticipant(
-                1L,
-                "Participante teste",
-                "11999990001"
-        );
-
         shoppingList = new ShoppingList(
-                1L,
+                listId,
                 "Lista teste com participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of(shoppingListParticipant))
+                new ArrayList<>(),
+                new ArrayList<>(List.of(new ShoppingListParticipant(participantId, "Participante teste", "11999990001")))
         );
-
-        savedShoppingList = new ShoppingList(
-                1L,
-                "Lista teste sem participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
-
-        shoppingListParticipantOutput = new ShoppingListParticipantOutput(
-                1L,
-                "Participante teste",
-                "11999990001"
-        );
-
-        shoppingListOutput = new ShoppingListOutput(
-                1L,
-                "Lista teste com participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
+        savedShoppingList = new ShoppingList(listId, "Lista teste sem participante", List.of(), List.of());
+        shoppingListOutput = new ShoppingListOutput(listId, "Lista teste sem participante", List.of(), List.of());
     }
 
     @Test
-    void shouldRemoveParticipantFromShoppingListSuccessfully() {
+    void shouldRemoveParticipantAndPersistUpdatedList() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
         when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
         when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
 
         ShoppingListOutput result = removeParticipantFromListService.removeParticipantFromShoppingList(listId, participantId);
 
-        assertEquals(0, result.participants().size());
+        assertSame(shoppingListOutput, result);
+        assertEquals(0, shoppingList.getParticipants().size());
+
+        var inOrder = inOrder(shoppingListRepositoryPort, shoppingListMapper);
+        inOrder.verify(shoppingListRepositoryPort).findById(listId);
+        inOrder.verify(shoppingListRepositoryPort).save(shoppingList);
+        inOrder.verify(shoppingListMapper).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldThrowExceptionWhenListNotFound() {
-        Long listId = 99L;
+    void shouldThrowWhenListDoesNotExist() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                removeParticipantFromListService.removeParticipantFromShoppingList(listId, participantId)
+        ShoppingListNotFoundException exception = assertThrows(
+                ShoppingListNotFoundException.class,
+                () -> removeParticipantFromListService.removeParticipantFromShoppingList(listId, participantId)
         );
 
-        assertEquals("Shopping list not found", ex.getMessage());
-
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+        assertEquals("Shopping list not found", exception.getMessage());
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldThrowExceptionWhenParticipantNotFound() {
-        shoppingList = new ShoppingList(
-                1L,
-                "Lista teste com participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
+    void shouldThrowWhenParticipantDoesNotExist() {
+        shoppingList = new ShoppingList(listId, "Lista teste sem participante", List.of(), List.of());
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
 
-        var ex = assertThrows(ParticipantNotFoundException.class,
-                () -> removeParticipantFromListService.removeParticipantFromShoppingList(listId, participantId));
+        ParticipantNotFoundException exception = assertThrows(
+                ParticipantNotFoundException.class,
+                () -> removeParticipantFromListService.removeParticipantFromShoppingList(listId, participantId)
+        );
 
-        assertEquals("Participant not found", ex.getMessage());
-
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+        assertEquals("Participant not found", exception.getMessage());
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
 }

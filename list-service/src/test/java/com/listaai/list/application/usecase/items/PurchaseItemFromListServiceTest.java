@@ -1,7 +1,7 @@
 package com.listaai.list.application.usecase.items;
 
-import com.listaai.list.application.dto.output.ShoppingListItemOutput;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
+import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.domain.enums.ItemUnit;
@@ -15,15 +15,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,8 +40,8 @@ class PurchaseItemFromListServiceTest {
     @InjectMocks
     private PurchaseItemFromListService purchaseItemFromListService;
 
-    private Long listId = 1L;
-    private Long itemId = 1L;
+    private final Long listId = 1L;
+    private final Long itemId = 1L;
 
     private ShoppingList shoppingList;
     private ShoppingList savedShoppingList;
@@ -52,96 +52,86 @@ class PurchaseItemFromListServiceTest {
         shoppingList = new ShoppingList(
                 listId,
                 "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, false))),
-                new ArrayList<>(List.of())
+                List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, false)),
+                List.of()
         );
-
         savedShoppingList = new ShoppingList(
                 listId,
                 "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, true))),
-                new ArrayList<>(List.of())
+                List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, true)),
+                List.of()
         );
-
-        shoppingListOutput = new ShoppingListOutput(
-                listId,
-                "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItemOutput(itemId, "Arroz", 2, ItemUnit.KG, true))),
-                new ArrayList<>(List.of())
-        );
+        shoppingListOutput = new ShoppingListOutput(listId, "Lista teste", List.of(), List.of());
     }
 
     @Test
-    void shouldMarkItemAsPurchasedSuccessfully() {
+    void shouldMarkItemAsPurchasedAndPersistUpdatedList() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
         when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
         when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
 
         ShoppingListOutput result = purchaseItemFromListService.purchaseItemFromList(listId, itemId, true);
 
-        assertTrue(result.items().getFirst().purchased());
+        assertSame(shoppingListOutput, result);
+        assertTrue(shoppingList.getItems().getFirst().isPurchased());
+
+        var inOrder = inOrder(shoppingListRepositoryPort, shoppingListMapper);
+        inOrder.verify(shoppingListRepositoryPort).findById(listId);
+        inOrder.verify(shoppingListRepositoryPort).save(shoppingList);
+        inOrder.verify(shoppingListMapper).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldUnmarkItemAsPurchasedSuccessfully() {
-        ShoppingList purchasedShoppingList = new ShoppingList(
-                listId,
-                "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, true))),
-                new ArrayList<>(List.of())
-        );
-        ShoppingList unmarkedSavedShoppingList = new ShoppingList(
-                listId,
-                "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, false))),
-                new ArrayList<>(List.of())
-        );
-        ShoppingListOutput unmarkedOutput = new ShoppingListOutput(
-                listId,
-                "Lista teste",
-                new ArrayList<>(List.of(new ShoppingListItemOutput(itemId, "Arroz", 2, ItemUnit.KG, false))),
-                new ArrayList<>(List.of())
-        );
-
-        when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(purchasedShoppingList));
-        when(shoppingListRepositoryPort.save(purchasedShoppingList)).thenReturn(unmarkedSavedShoppingList);
-        when(shoppingListMapper.toOutput(unmarkedSavedShoppingList)).thenReturn(unmarkedOutput);
-
-        ShoppingListOutput result = purchaseItemFromListService.purchaseItemFromList(listId, itemId, false);
-
-        assertFalse(result.items().getFirst().purchased());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenListNotFound() {
-        when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.empty());
-
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> purchaseItemFromListService.purchaseItemFromList(listId, itemId, true));
-
-        assertEquals("Shopping list not found", ex.getMessage());
-
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenItemNotFound() {
+    void shouldUnmarkItemAsPurchasedAndPersistUpdatedList() {
         shoppingList = new ShoppingList(
                 listId,
                 "Lista teste",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
+                List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, true)),
+                List.of()
+        );
+        savedShoppingList = new ShoppingList(
+                listId,
+                "Lista teste",
+                List.of(new ShoppingListItem(itemId, "Arroz", 2, ItemUnit.KG, false)),
+                List.of()
         );
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
+        when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
+        when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
 
-        RuntimeException ex = assertThrows(ItemNotFoundException.class,
-                () -> purchaseItemFromListService.purchaseItemFromList(listId, itemId, true));
+        ShoppingListOutput result = purchaseItemFromListService.purchaseItemFromList(listId, itemId, false);
 
-        assertEquals("Item not found", ex.getMessage());
+        assertSame(shoppingListOutput, result);
+        assertFalse(shoppingList.getItems().getFirst().isPurchased());
+    }
 
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+    @Test
+    void shouldThrowWhenListDoesNotExist() {
+        when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.empty());
+
+        ShoppingListNotFoundException exception = assertThrows(
+                ShoppingListNotFoundException.class,
+                () -> purchaseItemFromListService.purchaseItemFromList(listId, itemId, true)
+        );
+
+        assertEquals("Shopping list not found", exception.getMessage());
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
+    }
+
+    @Test
+    void shouldThrowWhenItemDoesNotExist() {
+        shoppingList = new ShoppingList(listId, "Lista teste", List.of(), List.of());
+        when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
+
+        ItemNotFoundException exception = assertThrows(
+                ItemNotFoundException.class,
+                () -> purchaseItemFromListService.purchaseItemFromList(listId, itemId, true)
+        );
+
+        assertEquals("Item not found", exception.getMessage());
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
 }

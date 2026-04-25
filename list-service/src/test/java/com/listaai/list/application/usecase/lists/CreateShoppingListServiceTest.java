@@ -19,13 +19,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CreateShoppingListServiceTest {
@@ -39,142 +37,115 @@ class CreateShoppingListServiceTest {
     @InjectMocks
     private CreateShoppingListService createShoppingListService;
 
-    private ShoppingListItemCommand itemCommand;
-    private ShoppingListParticipantCommand participantCommand;
-    private ShoppingListParticipantOutput shoppingListParticipantOutput;
-    private ShoppingListItemOutput shoppingListItemOutput;
-    private ShoppingListParticipant shoppingListParticipant;
-    private ShoppingListItem shoppingListItem;
+    private CreateShoppingListCommand shoppingListCommand;
+    private ShoppingList shoppingList;
+    private ShoppingList savedShoppingList;
+    private ShoppingListOutput shoppingListOutput;
 
     @BeforeEach
     void setUp() {
-        itemCommand = new ShoppingListItemCommand(
+        ShoppingListItemCommand itemCommand = new ShoppingListItemCommand(
                 "Arroz",
                 2,
                 ItemUnit.KG
         );
-
-        participantCommand = new ShoppingListParticipantCommand(
+        ShoppingListParticipantCommand participantCommand = new ShoppingListParticipantCommand(
                 "Participante teste",
                 "11999990001"
         );
 
-        shoppingListParticipantOutput = new ShoppingListParticipantOutput(
+        shoppingListCommand = new CreateShoppingListCommand(
+                "Lista populada",
+                List.of(itemCommand),
+                List.of(participantCommand)
+        );
+
+        ShoppingListItem shoppingListItem = new ShoppingListItem(
+                null,
+                "Arroz",
+                2,
+                ItemUnit.KG
+        );
+        ShoppingListParticipant shoppingListParticipant = new ShoppingListParticipant(
+                null,
+                "Participante teste",
+                "11999990001"
+        );
+        shoppingList = new ShoppingList(
+                null,
+                "Lista populada",
+                List.of(shoppingListItem),
+                List.of(shoppingListParticipant)
+        );
+
+        ShoppingListItem savedItem = new ShoppingListItem(
+                1L,
+                "Arroz",
+                2,
+                ItemUnit.KG
+        );
+        ShoppingListParticipant savedParticipant = new ShoppingListParticipant(
                 1L,
                 "Participante teste",
                 "11999990001"
         );
+        savedShoppingList = new ShoppingList(
+                1L,
+                "Lista populada",
+                List.of(savedItem),
+                List.of(savedParticipant)
+        );
 
-        shoppingListItemOutput = new ShoppingListItemOutput(
+        ShoppingListItemOutput shoppingListItemOutput = new ShoppingListItemOutput(
                 1L,
                 "Arroz",
                 2,
                 ItemUnit.KG,
                 false
         );
-
-        shoppingListParticipant = new ShoppingListParticipant(
+        ShoppingListParticipantOutput shoppingListParticipantOutput = new ShoppingListParticipantOutput(
                 1L,
                 "Participante teste",
                 "11999990001"
         );
-
-        shoppingListItem = new ShoppingListItem(
+        shoppingListOutput = new ShoppingListOutput(
                 1L,
-                "Arroz",
-                2,
-                ItemUnit.KG
+                "Lista populada",
+                List.of(shoppingListItemOutput),
+                List.of(shoppingListParticipantOutput)
         );
     }
 
     @Test
-    void shouldCreateCompleteShoppingListSuccessfully() {
-        CreateShoppingListCommand shoppingListCommand = new CreateShoppingListCommand(
-                "Lista populada",
-                new ArrayList<>(List.of(itemCommand)),
-                new ArrayList<>(List.of(participantCommand))
-        );
-
-        ShoppingListOutput shoppingListOutput = new ShoppingListOutput(
-                1L,
-                "Lista populada",
-                new ArrayList<>(List.of(shoppingListItemOutput)),
-                new ArrayList<>(List.of(shoppingListParticipantOutput))
-        );
-
-        ShoppingList shoppingList = new ShoppingList(
-                1L,
-                "Lista populada",
-                new ArrayList<>(List.of(shoppingListItem)),
-                new ArrayList<>(List.of(shoppingListParticipant))
-        );
-
-        ShoppingList savedShoppingList = new ShoppingList(
-                1L,
-                "Lista populada",
-                new ArrayList<>(List.of(shoppingListItem)),
-                new ArrayList<>(List.of(shoppingListParticipant))
-        );
+    void shouldCreateShoppingListUsingMapperAndRepositoryInOrder() {
         when(shoppingListMapper.toDomain(shoppingListCommand)).thenReturn(shoppingList);
         when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
         when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
 
         ShoppingListOutput result = createShoppingListService.createShoppingList(shoppingListCommand);
 
-        assertEquals(1L, result.id());
-        assertEquals("Lista populada", result.name());
-        assertEquals(1L, result.items().getFirst().id());
-        assertEquals("Arroz", result.items().getFirst().name());
-        assertEquals(1L, result.participants().getFirst().id());
-        assertEquals("Participante teste", result.participants().getFirst().name());
+        assertSame(shoppingListOutput, result);
 
-        verify(shoppingListMapper).toDomain(any());
-        verify(shoppingListRepositoryPort).save(any());
-        verify(shoppingListMapper).toOutput(any());
+        var inOrder = inOrder(shoppingListMapper, shoppingListRepositoryPort);
+        inOrder.verify(shoppingListMapper).toDomain(shoppingListCommand);
+        inOrder.verify(shoppingListRepositoryPort).save(shoppingList);
+        inOrder.verify(shoppingListMapper).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldCreateShoppingListWithoutItemAndParticipantSuccessfully() {
-        CreateShoppingListCommand shoppingListCommand = new CreateShoppingListCommand(
-                "Lista sem item e participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
+    void shouldPropagateRepositoryExceptionAndNotMapOutput() {
+        RuntimeException exception = new RuntimeException("database unavailable");
 
-        ShoppingListOutput shoppingListOutput = new ShoppingListOutput(
-                1L,
-                "Lista sem item e participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
-
-        ShoppingList shoppingList = new ShoppingList(
-                1L,
-                "Lista sem item e participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
-
-        ShoppingList savedShoppingList = new ShoppingList(
-                1L,
-                "Lista sem item e participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
         when(shoppingListMapper.toDomain(shoppingListCommand)).thenReturn(shoppingList);
-        when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
-        when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
+        when(shoppingListRepositoryPort.save(shoppingList)).thenThrow(exception);
 
-        ShoppingListOutput result = createShoppingListService.createShoppingList(shoppingListCommand);
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> createShoppingListService.createShoppingList(shoppingListCommand));
 
-        assertEquals(1L, result.id());
-        assertEquals("Lista sem item e participante", result.name());
-        assertEquals(0, result.items().size());
-        assertEquals(0, result.participants().size());
-
-        verify(shoppingListMapper).toDomain(any());
-        verify(shoppingListRepositoryPort).save(any());
-        verify(shoppingListMapper).toOutput(any());
+        assertSame(exception, thrown);
+        verify(shoppingListMapper).toDomain(shoppingListCommand);
+        verify(shoppingListRepositoryPort).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
 }

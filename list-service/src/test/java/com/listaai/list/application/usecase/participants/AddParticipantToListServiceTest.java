@@ -2,11 +2,10 @@ package com.listaai.list.application.usecase.participants;
 
 import com.listaai.list.application.dto.input.ShoppingListParticipantCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
-import com.listaai.list.application.dto.output.ShoppingListParticipantOutput;
+import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.mapper.ShoppingListParticipantMapper;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
-import com.listaai.list.application.utils.ShoppingListUtils;
 import com.listaai.list.domain.exception.participant.ParticipantAlreadyAddedException;
 import com.listaai.list.domain.model.ShoppingList;
 import com.listaai.list.domain.model.ShoppingListParticipant;
@@ -21,8 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AddParticipantToListServiceTest {
@@ -39,104 +43,82 @@ class AddParticipantToListServiceTest {
     @InjectMocks
     private AddParticipantToListService addParticipantToListService;
 
+    private final Long listId = 1L;
+
     private ShoppingList shoppingList;
+    private ShoppingListParticipant mappedParticipant;
     private ShoppingList savedShoppingList;
-    private ShoppingListParticipant shoppingListParticipant;
     private ShoppingListOutput shoppingListOutput;
-    private ShoppingListParticipantOutput shoppingListParticipantOutput;
     private ShoppingListParticipantCommand command;
 
     @BeforeEach
     void setUp() {
-        shoppingList = new ShoppingList(
-                1L,
-                "Lista teste vazia",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
-        );
-
-        shoppingListParticipant = new ShoppingListParticipant(
-                1L,
-                "Participante teste",
-                "11999990001"
-        );
-
+        shoppingList = new ShoppingList(listId, "Lista teste vazia", new ArrayList<>(), new ArrayList<>());
+        mappedParticipant = new ShoppingListParticipant(null, "Participante teste", "11999990001");
         savedShoppingList = new ShoppingList(
-                1L,
+                listId,
                 "Lista teste com participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of(shoppingListParticipant))
+                new ArrayList<>(),
+                new ArrayList<>(List.of(new ShoppingListParticipant(10L, "Participante teste", "11999990001")))
         );
-
-        shoppingListParticipantOutput = new ShoppingListParticipantOutput(
-                1L,
-                "Participante teste",
-                "11999990001"
-        );
-
-        shoppingListOutput = new ShoppingListOutput(
-                1L,
-                "Lista teste com participante",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of(shoppingListParticipantOutput))
-        );
-
-        command = new ShoppingListParticipantCommand(
-                "Participante teste",
-                "11999990001"
-        );
+        shoppingListOutput = new ShoppingListOutput(listId, "Lista teste com participante", List.of(), List.of());
+        command = new ShoppingListParticipantCommand("Participante teste", "11999990001");
     }
 
     @Test
-    void shouldAddParticipantToListSuccessfully() {
-        Long listId = 1L;
+    void shouldAddParticipantAndPersistUpdatedList() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
-        when(shoppingListParticipantMapper.toDomain(command)).thenReturn(shoppingListParticipant);
+        when(shoppingListParticipantMapper.toDomain(command)).thenReturn(mappedParticipant);
         when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
         when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
 
         ShoppingListOutput result = addParticipantToListService.addParticipantToShoppingList(listId, command);
 
-        assertEquals(1, result.participants().size());
-        assertEquals("Participante teste", result.participants().getFirst().name());
-        assertEquals("11999990001", result.participants().getFirst().phoneNumber());
+        assertSame(shoppingListOutput, result);
+        assertEquals(1, shoppingList.getParticipants().size());
+        assertSame(mappedParticipant, shoppingList.getParticipants().getFirst());
+
+        var inOrder = inOrder(shoppingListRepositoryPort, shoppingListParticipantMapper, shoppingListMapper);
+        inOrder.verify(shoppingListRepositoryPort).findById(listId);
+        inOrder.verify(shoppingListParticipantMapper).toDomain(command);
+        inOrder.verify(shoppingListRepositoryPort).save(shoppingList);
+        inOrder.verify(shoppingListMapper).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldThrowExceptionWhenListNotFound() {
-        Long listId = 99L;
+    void shouldThrowWhenListDoesNotExist() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                addParticipantToListService.addParticipantToShoppingList(listId, command)
+        ShoppingListNotFoundException exception = assertThrows(
+                ShoppingListNotFoundException.class,
+                () -> addParticipantToListService.addParticipantToShoppingList(listId, command)
         );
 
-        assertEquals("Shopping list not found", ex.getMessage());
-
-        verify(shoppingListParticipantMapper, never()).toDomain(any());
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+        assertEquals("Shopping list not found", exception.getMessage());
+        verify(shoppingListParticipantMapper, never()).toDomain(command);
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldThrowExceptionWhenParticipantAlreadyExists() {
-        Long listId = 1L;
+    void shouldThrowWhenParticipantAlreadyExists() {
         shoppingList = new ShoppingList(
-                1L,
-                "Lista teste vazia",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of(shoppingListParticipant))
+                listId,
+                "Lista teste com participante",
+                List.of(),
+                List.of(new ShoppingListParticipant(10L, "Participante teste", "11999990001"))
         );
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
-        when(shoppingListParticipantMapper.toDomain(command)).thenReturn(shoppingListParticipant);
+        when(shoppingListParticipantMapper.toDomain(command)).thenReturn(mappedParticipant);
 
-        RuntimeException ex = assertThrows(ParticipantAlreadyAddedException.class,
-                () -> addParticipantToListService.addParticipantToShoppingList(listId, command));
+        ParticipantAlreadyAddedException exception = assertThrows(
+                ParticipantAlreadyAddedException.class,
+                () -> addParticipantToListService.addParticipantToShoppingList(listId, command)
+        );
 
-        assertEquals("Participant already exists", ex.getMessage());
-
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+        assertEquals("Participant already exists", exception.getMessage());
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
 }

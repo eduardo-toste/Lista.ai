@@ -1,8 +1,8 @@
 package com.listaai.list.application.usecase.items;
 
 import com.listaai.list.application.dto.input.ShoppingListItemCommand;
-import com.listaai.list.application.dto.output.ShoppingListItemOutput;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
+import com.listaai.list.application.exception.ShoppingListNotFoundException;
 import com.listaai.list.application.mapper.ShoppingListItemMapper;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
@@ -21,12 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AddItemToListServiceTest {
@@ -43,109 +39,97 @@ class AddItemToListServiceTest {
     @InjectMocks
     private AddItemToListService addItemToListService;
 
+    private final Long listId = 1L;
+
     private ShoppingList shoppingList;
+    private ShoppingListItem mappedItem;
     private ShoppingList savedShoppingList;
-    private ShoppingListItem shoppingListItem;
-    private ShoppingListItemOutput shoppingListItemOutput;
     private ShoppingListOutput shoppingListOutput;
     private ShoppingListItemCommand command;
 
     @BeforeEach
     void setUp() {
         shoppingList = new ShoppingList(
-                1L,
+                listId,
                 "Lista teste vazia",
-                new ArrayList<>(List.of()),
-                new ArrayList<>(List.of())
+                new ArrayList<>(),
+                new ArrayList<>()
         );
-
-        shoppingListItem = new ShoppingListItem(
-                1L,
+        mappedItem = new ShoppingListItem(
+                null,
                 "Arroz",
                 2,
                 ItemUnit.KG
         );
-
         savedShoppingList = new ShoppingList(
-                1L,
+                listId,
                 "Lista teste com item",
-                new ArrayList<>(List.of(shoppingListItem)),
-                new ArrayList<>(List.of())
+                List.of(new ShoppingListItem(10L, "Arroz", 2, ItemUnit.KG)),
+                List.of()
         );
-
-        shoppingListItemOutput = new ShoppingListItemOutput(
-                1L,
-                "Arroz",
-                2,
-                ItemUnit.KG,
-                false
-        );
-
         shoppingListOutput = new ShoppingListOutput(
-                1L,
+                listId,
                 "Lista teste com item",
-                new ArrayList<>(List.of(shoppingListItemOutput)),
-                new ArrayList<>(List.of())
+                List.of(),
+                List.of()
         );
-
-        command = new ShoppingListItemCommand(
-                "Arroz",
-                2,
-                ItemUnit.KG
-        );
+        command = new ShoppingListItemCommand("Arroz", 2, ItemUnit.KG);
     }
 
     @Test
-    void shouldAddItemToListSuccessfully() {
-        Long listId = 1L;
+    void shouldAddItemToListAndPersistUpdatedList() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
-        when(shoppingListItemMapper.toDomain(command)).thenReturn(shoppingListItem);
+        when(shoppingListItemMapper.toDomain(command)).thenReturn(mappedItem);
         when(shoppingListRepositoryPort.save(shoppingList)).thenReturn(savedShoppingList);
         when(shoppingListMapper.toOutput(savedShoppingList)).thenReturn(shoppingListOutput);
 
         ShoppingListOutput result = addItemToListService.addItemToShoppingList(listId, command);
 
-        assertEquals(1, result.items().size());
-        assertEquals("Arroz", result.items().getFirst().name());
-        assertEquals(2, result.items().getFirst().quantity());
-        assertEquals(ItemUnit.KG, result.items().getFirst().unit());
+        assertSame(shoppingListOutput, result);
+        assertEquals(1, shoppingList.getItems().size());
+        assertSame(mappedItem, shoppingList.getItems().getFirst());
+
+        var inOrder = inOrder(shoppingListRepositoryPort, shoppingListItemMapper, shoppingListMapper);
+        inOrder.verify(shoppingListRepositoryPort).findById(listId);
+        inOrder.verify(shoppingListItemMapper).toDomain(command);
+        inOrder.verify(shoppingListRepositoryPort).save(shoppingList);
+        inOrder.verify(shoppingListMapper).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldThrowExceptionWhenListNotFound() {
-        Long listId = 99L;
+    void shouldThrowWhenListDoesNotExist() {
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                addItemToListService.addItemToShoppingList(listId, command)
+        ShoppingListNotFoundException exception = assertThrows(
+                ShoppingListNotFoundException.class,
+                () -> addItemToListService.addItemToShoppingList(listId, command)
         );
 
-        assertEquals("Shopping list not found", ex.getMessage());
-
-        verify(shoppingListItemMapper, never()).toDomain(any());
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+        assertEquals("Shopping list not found", exception.getMessage());
+        verify(shoppingListItemMapper, never()).toDomain(command);
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
     @Test
-    void shouldThrowExceptionWhenItemAlreadyExists() {
-        Long listId = 1L;
+    void shouldThrowWhenItemAlreadyExists() {
         shoppingList = new ShoppingList(
-                1L,
+                listId,
                 "Lista teste com item",
-                new ArrayList<>(List.of(new ShoppingListItem(2L, "Arroz", 1, ItemUnit.UN))),
-                new ArrayList<>(List.of())
+                List.of(new ShoppingListItem(2L, "Arroz", 1, ItemUnit.UN)),
+                new ArrayList<>()
         );
         when(shoppingListRepositoryPort.findById(listId)).thenReturn(Optional.of(shoppingList));
-        when(shoppingListItemMapper.toDomain(command)).thenReturn(shoppingListItem);
+        when(shoppingListItemMapper.toDomain(command)).thenReturn(mappedItem);
 
-        RuntimeException ex = assertThrows(ItemAlreadyAddedException.class,
-                () -> addItemToListService.addItemToShoppingList(listId, command));
+        ItemAlreadyAddedException exception = assertThrows(
+                ItemAlreadyAddedException.class,
+                () -> addItemToListService.addItemToShoppingList(listId, command)
+        );
 
-        assertEquals("Item already exists", ex.getMessage());
-
-        verify(shoppingListRepositoryPort, never()).save(any());
-        verify(shoppingListMapper, never()).toOutput(any());
+        assertEquals("Item already exists", exception.getMessage());
+        verify(shoppingListRepositoryPort, never()).save(shoppingList);
+        verify(shoppingListMapper, never()).toOutput(savedShoppingList);
     }
 
 }
