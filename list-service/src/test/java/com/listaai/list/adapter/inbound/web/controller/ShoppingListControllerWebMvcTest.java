@@ -22,6 +22,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -234,5 +238,47 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.path").value("/lists/999"));
 
         verify(getShoppingListUseCase).getShoppingListById(listId);
+    }
+
+    @Test
+    void shouldReturnPageOfShoppingLists() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        ShoppingListOutput output = new ShoppingListOutput(
+                1L,
+                "Churrasco",
+                List.of(new ShoppingListItemOutput(10L, "Carvao", 2, ItemUnit.UN, false)),
+                List.of(new ShoppingListParticipantOutput(20L, "Eduardo", "11999999999"))
+        );
+        Page<ShoppingListOutput> shoppingListsPage = new PageImpl<>(List.of(output), pageable, 1);
+
+        when(getShoppingListUseCase.getShoppingLists(any(Pageable.class))).thenReturn(shoppingListsPage);
+
+        mockMvc.perform(get("/lists"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Churrasco"))
+                .andExpect(jsonPath("$.content[0].items[0].id").value(10))
+                .andExpect(jsonPath("$.content[0].items[0].name").value("Carvao"))
+                .andExpect(jsonPath("$.content[0].items[0].quantity").value(2))
+                .andExpect(jsonPath("$.content[0].items[0].unit").value("UN"))
+                .andExpect(jsonPath("$.content[0].items[0].purchased").value(false))
+                .andExpect(jsonPath("$.content[0].participants[0].id").value(20))
+                .andExpect(jsonPath("$.content[0].participants[0].name").value("Eduardo"))
+                .andExpect(jsonPath("$.content[0].participants[0].phoneNumber").value("11999999999"));
+    }
+
+    @Test
+    void shouldReturnEmptyPageOfShoppingLists() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ShoppingListOutput> shoppingListsPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(getShoppingListUseCase.getShoppingLists(any(Pageable.class))).thenReturn(shoppingListsPage);
+
+        mockMvc.perform(get("/lists"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10));
     }
 }
