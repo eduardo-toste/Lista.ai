@@ -241,6 +241,110 @@ class ShoppingListIntegrationTest {
         assertThat(shoppingListJpaRepository.findById(listId).orElseThrow().getParticipants()).isEmpty();
     }
 
+    @Test
+    void shouldReturnConflictWhenAddingDuplicateItem() throws Exception {
+        JsonNode createdList = createList("Churrasco", "Carvao", "Eduardo");
+        Long listId = createdList.get("id").asLong();
+
+        mockMvc.perform(post("/lists/{listId}/items", listId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "carvao",
+                                  "quantity": 3,
+                                  "unit": "KG"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Item already exists"))
+                .andExpect(jsonPath("$.path").value("/lists/" + listId + "/items"));
+    }
+
+    @Test
+    void shouldReturnConflictWhenAddingDuplicateParticipant() throws Exception {
+        JsonNode createdList = createList("Churrasco", "Carvao", "Eduardo");
+        Long listId = createdList.get("id").asLong();
+
+        mockMvc.perform(post("/lists/{listId}/participants", listId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Eduardo Silva",
+                                  "phoneNumber": "11999999999"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Participant already exists"))
+                .andExpect(jsonPath("$.path").value("/lists/" + listId + "/participants"));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUpdatingNonexistentItem() throws Exception {
+        JsonNode createdList = createList("Mercado", "Cafe", "Eduardo");
+        Long listId = createdList.get("id").asLong();
+
+        mockMvc.perform(patch("/lists/{listId}/items/{itemId}", listId, 999999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Cafe premium",
+                                  "quantity": 2,
+                                  "unit": "BOX"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Item not found"))
+                .andExpect(jsonPath("$.path").value("/lists/" + listId + "/items/999999"));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUpdatingNonexistentParticipant() throws Exception {
+        JsonNode createdList = createList("Viagem", "Mala", "Eduardo");
+        Long listId = createdList.get("id").asLong();
+
+        mockMvc.perform(patch("/lists/{listId}/participants/{participantId}", listId, 999999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Eduardo Silva",
+                                  "phoneNumber": "11988887777"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Participant not found"))
+                .andExpect(jsonPath("$.path").value("/lists/" + listId + "/participants/999999"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenUpdatingItemWithInvalidQuantity() throws Exception {
+        JsonNode createdList = createList("Mercado", "Cafe", "Eduardo");
+        Long listId = createdList.get("id").asLong();
+        Long itemId = findItemByName(createdList, "Cafe").get("id").asLong();
+
+        mockMvc.perform(patch("/lists/{listId}/items/{itemId}", listId, itemId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Cafe premium",
+                                  "quantity": 0,
+                                  "unit": "BOX"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("quantity: Quantity must not be less than 1"))
+                .andExpect(jsonPath("$.path").value("/lists/" + listId + "/items/" + itemId));
+    }
+
     private JsonNode createList(String listName, String itemName, String participantName) throws Exception {
         return postForJson("""
                 {
