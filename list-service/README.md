@@ -161,7 +161,7 @@ spring.datasource.password=list_pass
 
 Também existe um arquivo de referência:
 
-- [src/main/resources/application.properties.example](/Users/eduardotoste/Documents/projects/Lista.ai/list-service/src/main/resources/application.properties.example:1)
+- `src/main/resources/application.properties.example`
 
 ## 10. Execução Local
 
