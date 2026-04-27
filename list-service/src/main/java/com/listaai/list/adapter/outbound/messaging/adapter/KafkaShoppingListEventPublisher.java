@@ -6,11 +6,15 @@ import com.listaai.list.adapter.outbound.messaging.exception.ShoppingListEventPu
 import com.listaai.list.adapter.outbound.messaging.payload.ShoppingListSharedEvent;
 import com.listaai.list.application.port.outbound.ShoppingListEventPublisherPort;
 import com.listaai.list.domain.model.ShoppingList;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class KafkaShoppingListEventPublisher implements ShoppingListEventPublisherPort {
+
+    @Value("${app.kafka.topic.shopping-list-shared}")
+    private String shoppingListSharedTopic;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
@@ -26,7 +30,7 @@ public class KafkaShoppingListEventPublisher implements ShoppingListEventPublish
             ShoppingListSharedEvent event = ShoppingListSharedEvent.fromDomain(shoppingList);
 
             kafkaTemplate.send(
-                    "shopping-list-events",
+                    shoppingListSharedTopic,
                     shoppingList.getId().toString(),
                     objectMapper.writeValueAsString(event)
             );
