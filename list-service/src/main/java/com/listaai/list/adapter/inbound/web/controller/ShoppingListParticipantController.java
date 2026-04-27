@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +47,7 @@ public class ShoppingListParticipantController {
     @PostMapping
     public ResponseEntity<ShoppingListResponse> addParticipantToList(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long listId,
-            @RequestBody CreateShoppingListParticipantRequest request) {
+            @RequestBody @Valid CreateShoppingListParticipantRequest request) {
         ShoppingListOutput output = addParticipantToListUseCase.addParticipantToShoppingList(listId, shoppingListParticipantWebMapper.toCommand(request));
         ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
         return ResponseEntity.ok(response);
@@ -67,7 +68,7 @@ public class ShoppingListParticipantController {
     public ResponseEntity<ShoppingListResponse> updateParticipantFromList(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long listId,
             @Parameter(description = "ID of the participant to update", required = true) @PathVariable Long participantId,
-            @RequestBody UpdateShoppingListParticipantRequest request) {
+            @RequestBody @Valid UpdateShoppingListParticipantRequest request) {
         ShoppingListOutput output = updateParticipantFromListUseCase.updateParticipantFromShoppingListUseCase(listId, participantId, shoppingListParticipantWebMapper.toCommand(request));
         ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
         return ResponseEntity.ok(response);

@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +50,7 @@ public class ShoppingListItemController {
     @PostMapping
     public ResponseEntity<ShoppingListResponse> addItemToList(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long listId,
-            @RequestBody CreateShoppingListItemRequest itemRequest) {
+            @RequestBody @Valid CreateShoppingListItemRequest itemRequest) {
         ShoppingListOutput output = addItemToListUseCase.addItemToShoppingList(listId, shoppingListItemWebMapper.toCommand(itemRequest));
         ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
         return ResponseEntity.ok(response);
@@ -89,7 +90,7 @@ public class ShoppingListItemController {
     public ResponseEntity<ShoppingListResponse> updateItemFromList(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long listId,
             @Parameter(description = "ID of the item to update", required = true) @PathVariable Long itemId,
-            @RequestBody UpdateShoppingListItemRequest request) {
+            @RequestBody @Valid UpdateShoppingListItemRequest request) {
         ShoppingListOutput output = updateItemFromListUseCase.updateItem(listId, itemId, shoppingListItemWebMapper.toCommand(request));
         ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
         return ResponseEntity.ok(response);
@@ -110,7 +111,7 @@ public class ShoppingListItemController {
     public ResponseEntity<ShoppingListResponse> purchaseItem(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long listId,
             @Parameter(description = "ID of the item to update", required = true) @PathVariable Long itemId,
-            @RequestBody PurchaseItemRequest request) {
+            @RequestBody @Valid PurchaseItemRequest request) {
         ShoppingListOutput output = purchaseItemFromListUseCase.purchaseItemFromList(listId, itemId, request.purchased());
         ShoppingListResponse response = shoppingListWebMapper.toResponse(output);
         return ResponseEntity.ok(response);
