@@ -101,7 +101,7 @@ public class ShoppingListController {
     @PatchMapping("{id}")
     public ResponseEntity<ShoppingListResponse> updateShoppingListName(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long id,
-            @RequestBody UpdateShoppingListNameRequest request) {
+            @RequestBody @Valid UpdateShoppingListNameRequest request) {
         ShoppingListOutput output = updateListNameUseCase.updateName(id, request.name());
         ShoppingListResponse response = shoppingListMapper.toResponse(output);
         return ResponseEntity.ok(response);
