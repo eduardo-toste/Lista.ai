@@ -36,8 +36,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = ShoppingListController.class)
 @Import({
@@ -348,5 +347,34 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.path").value("/lists/999"));
 
         verify(updateListNameUseCase).updateName(listId, "Novo nome");
+    }
+
+    @Test
+    void shouldDeleteShoppingList() throws Exception {
+        Long listId = 1L;
+
+        mockMvc.perform(delete("/lists/{id}", listId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(""));
+
+        verify(deleteShoppingListUseCase).delete(listId);
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenDeletingNonexistentShoppingList() throws
+            Exception {
+        Long listId = 999L;
+
+        doThrow(new ShoppingListNotFoundException())
+                .when(deleteShoppingListUseCase).delete(listId);
+
+        mockMvc.perform(delete("/lists/{id}", listId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Shopping list not found"))
+                .andExpect(jsonPath("$.path").value("/lists/999"));
+
+        verify(deleteShoppingListUseCase).delete(listId);
     }
 }
