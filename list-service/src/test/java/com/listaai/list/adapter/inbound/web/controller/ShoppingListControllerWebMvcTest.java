@@ -20,6 +20,7 @@ import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
 import com.listaai.list.domain.enums.ItemUnit;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -33,6 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -254,6 +256,9 @@ class ShoppingListControllerWebMvcTest {
 
         mockMvc.perform(get("/lists"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(jsonPath("$.content[0].name").value("Churrasco"))
                 .andExpect(jsonPath("$.content[0].items[0].id").value(10))
@@ -264,6 +269,8 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].participants[0].id").value(20))
                 .andExpect(jsonPath("$.content[0].participants[0].name").value("Eduardo"))
                 .andExpect(jsonPath("$.content[0].participants[0].phoneNumber").value("11999999999"));
+
+        verify(getShoppingListUseCase).getShoppingLists(any(Pageable.class));
     }
 
     @Test
@@ -279,6 +286,26 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.number").value(0))
                 .andExpect(jsonPath("$.size").value(10));
+
+        verify(getShoppingListUseCase).getShoppingLists(any(Pageable.class));
+    }
+
+    @Test
+    void shouldPassPaginationParametersToGetShoppingListsUseCase() throws Exception {
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        when(getShoppingListUseCase.getShoppingLists(any(Pageable.class)))
+                .thenReturn(Page.empty(PageRequest.of(1, 5)));
+
+        mockMvc.perform(get("/lists")
+                        .param("page", "1")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.size").value(5));
+
+        verify(getShoppingListUseCase).getShoppingLists(pageableCaptor.capture());
+        assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(1);
+        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(5);
     }
 
     @Test
@@ -315,18 +342,19 @@ class ShoppingListControllerWebMvcTest {
 
     @Test
     void shouldReturnBadRequestWhenShoppingListUpdateRequestIsInvalid() throws Exception {
+        Long listId = 1L;
         UpdateShoppingListNameRequest request = new UpdateShoppingListNameRequest(null);
 
-        mockMvc.perform(post("/lists")
+        mockMvc.perform(patch("/lists/{id}", listId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("name: Shopping list name must not be blank"))
-                .andExpect(jsonPath("$.path").value("/lists"));
+                .andExpect(jsonPath("$.message").value("name: Shopping list name must not be blank."))
+                .andExpect(jsonPath("$.path").value("/lists/1"));
 
-        verify(createShoppingListUseCase, never()).createShoppingList(any());
+        verify(updateListNameUseCase, never()).updateName(any(), anyString());
     }
 
     @Test
