@@ -10,4 +10,5 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.open-in-view=false
 
 spring.kafka.bootstrap-servers=localhost:kafka_port
+app.kafka.topic.shopping-list-shared=your_topic
 logging.level.org.apache.kafka=DEBUG
