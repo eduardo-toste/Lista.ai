@@ -1,6 +1,6 @@
 package com.listaai.list.application.usecase.lists;
 
-import com.listaai.list.application.dto.input.CreateShoppingListCommand;
+import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
@@ -18,7 +18,7 @@ public class CreateShoppingListService implements CreateShoppingListUseCase {
     }
 
     @Override
-    public ShoppingListOutput createShoppingList(CreateShoppingListCommand command) {
+    public ShoppingListOutput createShoppingList(ShoppingListCommand command) {
         ShoppingList shoppingList = shoppingListMapper.toDomain(command);
         ShoppingList savedShoppingList = shoppingListRepositoryPort.save(shoppingList);
         return shoppingListMapper.toOutput(savedShoppingList);

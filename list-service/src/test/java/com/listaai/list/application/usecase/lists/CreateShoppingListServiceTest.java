@@ -1,6 +1,6 @@
 package com.listaai.list.application.usecase.lists;
 
-import com.listaai.list.application.dto.input.CreateShoppingListCommand;
+import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.input.ShoppingListItemCommand;
 import com.listaai.list.application.dto.input.ShoppingListParticipantCommand;
 import com.listaai.list.application.dto.output.ShoppingListItemOutput;
@@ -37,7 +37,7 @@ class CreateShoppingListServiceTest {
     @InjectMocks
     private CreateShoppingListService createShoppingListService;
 
-    private CreateShoppingListCommand shoppingListCommand;
+    private ShoppingListCommand shoppingListCommand;
     private ShoppingList shoppingList;
     private ShoppingList savedShoppingList;
     private ShoppingListOutput shoppingListOutput;
@@ -54,7 +54,7 @@ class CreateShoppingListServiceTest {
                 "11999990001"
         );
 
-        shoppingListCommand = new CreateShoppingListCommand(
+        shoppingListCommand = new ShoppingListCommand(
                 "Lista populada",
                 List.of(itemCommand),
                 List.of(participantCommand)

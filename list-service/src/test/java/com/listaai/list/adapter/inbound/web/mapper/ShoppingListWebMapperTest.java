@@ -4,7 +4,7 @@ import com.listaai.list.adapter.inbound.web.request.CreateShoppingListItemReques
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListParticipantRequest;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
-import com.listaai.list.application.dto.input.CreateShoppingListCommand;
+import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListItemOutput;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.dto.output.ShoppingListParticipantOutput;
@@ -17,9 +17,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ShoppingListWebMapperTest {
 
@@ -41,7 +39,7 @@ class ShoppingListWebMapperTest {
                 List.of(new CreateShoppingListParticipantRequest("Eduardo", "11999990001"))
         );
 
-        CreateShoppingListCommand result = shoppingListWebMapper.toCommand(request);
+        ShoppingListCommand result = shoppingListWebMapper.toCommand(request);
 
         assertEquals("Lista do mercado", result.name());
         assertEquals(1, result.items().size());

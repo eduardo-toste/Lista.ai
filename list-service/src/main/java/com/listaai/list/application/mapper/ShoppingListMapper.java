@@ -1,6 +1,6 @@
 package com.listaai.list.application.mapper;
 
-import com.listaai.list.application.dto.input.CreateShoppingListCommand;
+import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.domain.model.ShoppingList;
 import org.springframework.data.domain.Page;
@@ -17,7 +17,7 @@ public class ShoppingListMapper {
         this.shoppingListParticipantMapper = shoppingListParticipantMapper;
     }
 
-    public ShoppingList toDomain(CreateShoppingListCommand command) {
+    public ShoppingList toDomain(ShoppingListCommand command) {
         return new ShoppingList(
                 null,
                 command.name(),

@@ -1,6 +1,6 @@
 package com.listaai.list.application.mapper;
 
-import com.listaai.list.application.dto.input.CreateShoppingListCommand;
+import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.input.ShoppingListItemCommand;
 import com.listaai.list.application.dto.input.ShoppingListParticipantCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
@@ -16,10 +16,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ShoppingListMapperTest {
 
@@ -35,7 +32,7 @@ class ShoppingListMapperTest {
 
     @Test
     void shouldMapCreateShoppingListCommandToDomain() {
-        CreateShoppingListCommand command = new CreateShoppingListCommand(
+        ShoppingListCommand command = new ShoppingListCommand(
                 "Lista do mercado",
                 List.of(new ShoppingListItemCommand("Arroz", 2, ItemUnit.KG)),
                 List.of(new ShoppingListParticipantCommand("Eduardo", "11999990001"))

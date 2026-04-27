@@ -4,7 +4,7 @@ import com.listaai.list.adapter.inbound.web.mapper.ShoppingListWebMapper;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.request.UpdateShoppingListNameRequest;
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
-import com.listaai.list.application.dto.input.CreateShoppingListCommand;
+import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.DeleteShoppingListUseCase;
@@ -48,7 +48,7 @@ public class ShoppingListController {
     })
     @PostMapping
     public ResponseEntity<ShoppingListResponse> createShoppingList(@RequestBody @Valid CreateShoppingListRequest request) {
-        CreateShoppingListCommand command = shoppingListMapper.toCommand(request);
+        ShoppingListCommand command = shoppingListMapper.toCommand(request);
         ShoppingListOutput output = createShoppingListUseCase.createShoppingList(command);
         ShoppingListResponse response = shoppingListMapper.toResponse(output);
         return ResponseEntity.ok(response);
