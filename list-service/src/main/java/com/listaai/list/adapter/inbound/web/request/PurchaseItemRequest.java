@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record PurchaseItemRequest(
 
         @NotNull(message = "Purchase status must not be null")
-        boolean purchased
+        Boolean purchased
 
 ) {
 }
