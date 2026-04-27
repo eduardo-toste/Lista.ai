@@ -9,6 +9,7 @@ import com.listaai.list.adapter.inbound.web.mapper.ShoppingListWebMapper;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListItemRequest;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListParticipantRequest;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
+import com.listaai.list.adapter.inbound.web.request.UpdateShoppingListNameRequest;
 import com.listaai.list.application.dto.output.ShoppingListItemOutput;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.dto.output.ShoppingListParticipantOutput;
@@ -34,8 +35,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -280,5 +280,73 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.number").value(0))
                 .andExpect(jsonPath("$.size").value(10));
+    }
+
+    @Test
+    void shouldUpdateShoppingList() throws Exception {
+        Long listId = 1L;
+        ShoppingListOutput output = new ShoppingListOutput(
+                1L,
+                "Churras",
+                List.of(new ShoppingListItemOutput(10L, "Carvao", 2, ItemUnit.UN, false)),
+                List.of(new ShoppingListParticipantOutput(20L, "Eduardo", "11999999999"))
+        );
+
+        when(updateListNameUseCase.updateName(eq(listId), anyString())).thenReturn(output);
+
+        UpdateShoppingListNameRequest request = new UpdateShoppingListNameRequest("Churras");
+
+        mockMvc.perform(patch("/lists/{id}", listId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Churras"))
+                .andExpect(jsonPath("$.items[0].id").value(10))
+                .andExpect(jsonPath("$.items[0].name").value("Carvao"))
+                .andExpect(jsonPath("$.items[0].quantity").value(2))
+                .andExpect(jsonPath("$.items[0].unit").value("UN"))
+                .andExpect(jsonPath("$.items[0].purchased").value(false))
+                .andExpect(jsonPath("$.participants[0].id").value(20))
+                .andExpect(jsonPath("$.participants[0].name").value("Eduardo"))
+                .andExpect(jsonPath("$.participants[0].phoneNumber").value("11999999999"));
+
+        verify(updateListNameUseCase).updateName(eq(listId), anyString());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenShoppingListUpdateRequestIsInvalid() throws Exception {
+        UpdateShoppingListNameRequest request = new UpdateShoppingListNameRequest(null);
+
+        mockMvc.perform(post("/lists")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("name: Shopping list name must not be blank"))
+                .andExpect(jsonPath("$.path").value("/lists"));
+
+        verify(createShoppingListUseCase, never()).createShoppingList(any());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUpdatingNonexistentShoppingList() throws Exception {
+        Long listId = 999L;
+        UpdateShoppingListNameRequest request = new UpdateShoppingListNameRequest("Novo nome");
+
+        when(updateListNameUseCase.updateName(eq(listId), eq("Novo nome")))
+                .thenThrow(new ShoppingListNotFoundException());
+
+        mockMvc.perform(patch("/lists/{id}", listId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Shopping list not found"))
+                .andExpect(jsonPath("$.path").value("/lists/999"));
+
+        verify(updateListNameUseCase).updateName(listId, "Novo nome");
     }
 }
