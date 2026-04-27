@@ -1,15 +1,10 @@
 package com.listaai.list.configuration.usecase;
 
 import com.listaai.list.application.mapper.ShoppingListMapper;
-import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
-import com.listaai.list.application.port.inbound.lists.DeleteShoppingListUseCase;
-import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
-import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
+import com.listaai.list.application.port.inbound.lists.*;
+import com.listaai.list.application.port.outbound.ShoppingListEventPublisherPort;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
-import com.listaai.list.application.usecase.lists.CreateShoppingListService;
-import com.listaai.list.application.usecase.lists.DeleteShoppingListService;
-import com.listaai.list.application.usecase.lists.GetShoppingListService;
-import com.listaai.list.application.usecase.lists.UpdateListNameService;
+import com.listaai.list.application.usecase.lists.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,6 +29,11 @@ public class ShoppingListUseCaseConfig {
     @Bean
     public DeleteShoppingListUseCase deleteShoppingListUseCase(ShoppingListRepositoryPort shoppingListRepositoryPort) {
         return new DeleteShoppingListService(shoppingListRepositoryPort);
+    }
+
+    @Bean
+    public ShareShoppingListUseCase shareShoppingListUseCase(ShoppingListRepositoryPort shoppingListRepositoryPort, ShoppingListEventPublisherPort shoppingListEventPublisherPort) {
+        return new ShareShoppingListService(shoppingListRepositoryPort, shoppingListEventPublisherPort);
     }
 
 }
