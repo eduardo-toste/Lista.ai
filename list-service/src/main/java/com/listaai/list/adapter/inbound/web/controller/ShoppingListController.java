@@ -6,10 +6,7 @@ import com.listaai.list.adapter.inbound.web.request.UpdateShoppingListNameReques
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.ShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
-import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
-import com.listaai.list.application.port.inbound.lists.DeleteShoppingListUseCase;
-import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
-import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
+import com.listaai.list.application.port.inbound.lists.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,6 +31,7 @@ public class ShoppingListController {
     private final GetShoppingListUseCase getShoppingListUseCase;
     private final UpdateListNameUseCase updateListNameUseCase;
     private final DeleteShoppingListUseCase deleteShoppingListUseCase;
+    private final ShareShoppingListUseCase shareShoppingListUseCase;
     private final ShoppingListWebMapper shoppingListMapper;
 
     @Operation(
@@ -120,6 +118,12 @@ public class ShoppingListController {
     public ResponseEntity<Void> deleteShoppingList(
             @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long id) {
         deleteShoppingListUseCase.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("{id}/share")
+    public ResponseEntity<Void> shareShoppingList(@PathVariable Long id) {
+        shareShoppingListUseCase.shareShoppingList(id);
         return ResponseEntity.ok().build();
     }
 
