@@ -1,4 +1,4 @@
-package com.listaai.list.configuration;
+package com.listaai.list.configuration.usecase;
 
 import com.listaai.list.application.mapper.ShoppingListItemMapper;
 import com.listaai.list.application.mapper.ShoppingListMapper;

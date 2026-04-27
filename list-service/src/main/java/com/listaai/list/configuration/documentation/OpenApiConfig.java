@@ -1,4 +1,4 @@
-package com.listaai.list.configuration;
+package com.listaai.list.configuration.documentation;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
