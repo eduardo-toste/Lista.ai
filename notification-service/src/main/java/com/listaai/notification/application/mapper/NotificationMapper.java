@@ -21,9 +21,9 @@ public class NotificationMapper {
                 participant.phoneNumber(),
                 templateName,
                 Map.of(
-                        "participantName", participant.name(),
-                        "shoppingListName", command.shoppingListName(),
-                        "itemsSummary", buildItemsSummary(command)
+                        "1", participant.name(),
+                        "2", command.shoppingListName(),
+                        "3", buildItemsSummary(command)
                 )
         );
     }
