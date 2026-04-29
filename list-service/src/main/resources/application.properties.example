@@ -12,3 +12,5 @@ spring.jpa.open-in-view=false
 spring.kafka.bootstrap-servers=localhost:kafka_port
 app.kafka.topic.shopping-list-shared=your_topic
 logging.level.org.apache.kafka=DEBUG
+
+clients.recipe-service.url=your_url
