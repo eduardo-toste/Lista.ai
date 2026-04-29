@@ -1,8 +1,10 @@
 package com.listaai.list.adapter.inbound.web.mapper;
 
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
+import com.listaai.list.adapter.inbound.web.request.CreateSmartShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.ShoppingListCommand;
+import com.listaai.list.application.dto.input.SmartShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,16 @@ public class ShoppingListWebMapper {
                 request.participants().stream()
                         .map(shoppingListParticipantWebMapper::toCommand)
                         .toList()
+        );
+    }
+
+    public SmartShoppingListCommand toCommand(CreateSmartShoppingListRequest request) {
+        return new SmartShoppingListCommand(
+                request.name(),
+                request.participants().stream()
+                        .map(shoppingListParticipantWebMapper::toCommand)
+                        .toList(),
+                request.recipeMessage()
         );
     }
 
