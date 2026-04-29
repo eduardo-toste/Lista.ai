@@ -14,3 +14,4 @@ app.kafka.topic.shopping-list-shared=your_topic
 logging.level.org.apache.kafka=DEBUG
 
 clients.recipe-service.url=your_url
+app.cors.allowed-origins=http://localhost:5173
