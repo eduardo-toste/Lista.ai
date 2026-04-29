@@ -2,6 +2,7 @@ package com.listaai.list.configuration.usecase;
 
 import com.listaai.list.application.mapper.ShoppingListMapper;
 import com.listaai.list.application.port.inbound.lists.*;
+import com.listaai.list.application.port.outbound.RecipeExtractionPort;
 import com.listaai.list.application.port.outbound.ShoppingListEventPublisherPort;
 import com.listaai.list.application.port.outbound.ShoppingListRepositoryPort;
 import com.listaai.list.application.usecase.lists.*;
@@ -34,6 +35,11 @@ public class ShoppingListUseCaseConfig {
     @Bean
     public ShareShoppingListUseCase shareShoppingListUseCase(ShoppingListRepositoryPort shoppingListRepositoryPort, ShoppingListEventPublisherPort shoppingListEventPublisherPort) {
         return new ShareShoppingListService(shoppingListRepositoryPort, shoppingListEventPublisherPort);
+    }
+
+    @Bean
+    public CreateSmartShoppingListUseCase createSmartShoppingListUseCase(ShoppingListRepositoryPort shoppingListRepositoryPort, RecipeExtractionPort recipeExtractionPort, ShoppingListMapper shoppingListMapper) {
+        return new CreateSmartShoppingListService(recipeExtractionPort, shoppingListMapper, shoppingListRepositoryPort);
     }
 
 }
