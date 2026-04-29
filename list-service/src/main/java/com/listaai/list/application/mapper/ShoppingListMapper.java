@@ -1,10 +1,13 @@
 package com.listaai.list.application.mapper;
 
 import com.listaai.list.application.dto.input.ShoppingListCommand;
+import com.listaai.list.application.dto.input.SmartShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.domain.model.ShoppingList;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 
 @Component
 public class ShoppingListMapper {
@@ -24,6 +27,17 @@ public class ShoppingListMapper {
                 command.items().stream()
                         .map(shoppingListItemMapper::toDomain)
                         .toList(),
+                command.participants().stream()
+                        .map(shoppingListParticipantMapper::toDomain)
+                        .toList()
+        );
+    }
+
+    public ShoppingList toDomain(SmartShoppingListCommand command) {
+        return new ShoppingList(
+                null,
+                command.name(),
+                new ArrayList<>(),
                 command.participants().stream()
                         .map(shoppingListParticipantMapper::toDomain)
                         .toList()
