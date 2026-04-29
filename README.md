@@ -1,113 +1,168 @@
 # Lista.ai
 
-Projeto em evolução para gerenciamento de listas de compras, com foco em arquitetura orientada a microsserviços, separação de responsabilidades e evolução futura com apoio de IA.
+`Lista.ai` é uma plataforma orientada a microsserviços para gestão de listas de compras, com suporte a fluxos inteligentes apoiados por IA e integrações assíncronas entre serviços.
 
-## Índice
+O repositório está estruturado em torno de três serviços principais:
 
-- [1. Visão Geral](#1-visão-geral)
-- [2. Proposta Técnica](#2-proposta-técnica)
-- [3. Estado Atual](#3-estado-atual)
-- [4. O Que Ainda Está em Evolução](#4-o-que-ainda-está-em-evolução)
-- [5. Stack Principal](#5-stack-principal)
-- [6. Estrutura do Repositório](#6-estrutura-do-repositório)
-- [7. Qualidade do Projeto](#7-qualidade-do-projeto)
-- [8. READMEs dos Serviços](#8-readmes-dos-serviços)
+- `list-service`: responsável pelo gerenciamento de listas, itens, participantes e compartilhamento
+- `recipe-service`: responsável pela conversão de receitas em itens estruturados de compra
+- `notification-service`: responsável pelo consumo de eventos de compartilhamento e envio de notificações
 
-## 1. Visão Geral
+## Visão Geral
 
-O `Lista.ai` utiliza o domínio de listas de compras como base para construir uma plataforma com crescimento progressivo, tanto em funcionalidades quanto em arquitetura.
+O projeto foi concebido para materializar, de forma aplicada, os seguintes princípios:
 
-A proposta é começar com o gerenciamento de listas, itens e participantes, e evoluir para fluxos mais inteligentes, incluindo recursos apoiados por IA e comunicação entre serviços.
+- arquitetura hexagonal pragmática
+- separação clara entre domínio, aplicação e infraestrutura
+- comunicação síncrona entre serviços via HTTP
+- integração assíncrona orientada a eventos com Kafka
+- incorporação progressiva de capacidades de IA em fluxos de negócio bem delimitados
 
-Do ponto de vista técnico, o projeto prioriza uma base organizada, com responsabilidades bem definidas, contratos claros e estrutura preparada para expansão.
+Dentro desse desenho, a plataforma já contempla um cenário funcional completo:
 
-## 2. Proposta Técnica
+1. criação e manutenção de listas no `list-service`
+2. geração automática de itens a partir de receitas via `recipe-service`
+3. compartilhamento de listas com publicação de eventos
+4. processamento assíncrono desses eventos pelo `notification-service`
 
-O projeto foi estruturado para demonstrar, na prática:
-
-- arquitetura hexagonal aplicada a serviços reais
-- evolução orientada a microsserviços
-- comunicação assíncrona entre serviços com Kafka como direção arquitetural
-- separação entre domínio, aplicação e infraestrutura
-- documentação de API como parte do produto
-- testes automatizados em múltiplas camadas
-
-Isso dá ao repositório um valor técnico que vai além de um projeto de estudo isolado ou de um CRUD convencional.
-
-## 3. Estado Atual
-
-Atualmente, o repositório já possui um microsserviço implementado:
-
-- `list-service`: responsável pelo gerenciamento de listas, itens e participantes
-
-Esse serviço já conta com:
-
-- API REST funcional
-- persistência com PostgreSQL
-- documentação OpenAPI/Swagger
-- testes unitários, web, persistência e integração
-
-## 4. O Que Ainda Está em Evolução
-
-O projeto ainda não está completo como plataforma. Os principais pontos em aberto hoje são:
-
-- implementação dos próximos microsserviços planejados
-- integração entre serviços
-- funcionalidades relacionadas a IA
-- evolução adicional da infraestrutura e do ambiente de execução
-
-Esse ponto é intencional: o repositório já tem uma base sólida, mas ainda preserva espaço claro para expansão arquitetural.
-
-## 5. Stack Principal
-
-- Java 21
-- Spring Boot 3
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- PostgreSQL
-- Apache Kafka
-- Springdoc OpenAPI / Swagger UI
-- JUnit 5
-- Docker Compose
-
-## 6. Estrutura do Repositório
+## Estrutura do Repositório
 
 ```text
 .
+├── .env
 ├── docker-compose.yml
 ├── README.md
-└── list-service
-    ├── pom.xml
-    ├── mvnw
-    ├── README.md
-    └── src
+├── list-service
+├── notification-service
+└── recipe-service
 ```
 
-## 7. Qualidade do Projeto
+## Serviços
 
-O serviço já implementado possui uma base concreta de qualidade, incluindo:
+| Serviço | Responsabilidade | Integração Principal | Porta Padrão |
+| --- | --- | --- | --- |
+| `list-service` | Gestão de listas, criação inteligente e compartilhamento | REST, Kafka Producer, OpenFeign | `8080` |
+| `recipe-service` | Extração de itens a partir de receita | REST | `8082` |
+| `notification-service` | Processamento de eventos e envio de notificações | Kafka Consumer | n/a |
+
+## Arquitetura
+
+### `list-service`
+
+- concentra o domínio principal da plataforma
+- persiste dados em PostgreSQL
+- publica eventos de compartilhamento em Kafka
+- consome o `recipe-service` via OpenFeign para criação de listas inteligentes
+
+### `recipe-service`
+
+- expõe um endpoint REST para interpretação de receitas
+- constrói prompts restritivos para extração de ingredientes
+- utiliza Google GenAI por meio do Spring AI
+- retorna itens normalizados compatíveis com o contrato consumido pelo `list-service`
+
+### `notification-service`
+
+- consome eventos do tópico de compartilhamento
+- converte a mensagem recebida em comando de aplicação
+- envia notificações WhatsApp por meio de templates Twilio
+
+## Infraestrutura Local
+
+A infraestrutura compartilhada para desenvolvimento está definida em [docker-compose.yml](/Users/eduardotoste/Documents/projects/Lista.ai/docker-compose.yml:1) e contempla:
+
+- PostgreSQL para o `list-service`
+- broker Kafka
+- Kafka UI para inspeção local
+
+Endpoints locais padrão:
+
+- PostgreSQL: `localhost:5432`
+- Kafka: `localhost:19092`
+- Kafka UI: `http://localhost:8081`
+
+## Execução Local
+
+### 1. Subir a infraestrutura
+
+O arquivo `.env` na raiz do projeto é utilizado pelo Docker Compose para configuração do banco local.
+
+```bash
+docker compose up -d
+```
+
+### 2. Configurar os serviços
+
+Cada serviço possui um `application.properties.example` com os parâmetros esperados para execução local.
+
+Recomendação:
+
+- manter credenciais reais e chaves de API fora de arquivos versionados
+- preferir variáveis de ambiente ou mecanismos externos de gestão de segredos
+
+### 3. Executar os serviços
+
+Em terminais separados:
+
+```bash
+cd list-service && ./mvnw spring-boot:run
+```
+
+```bash
+cd recipe-service && ./mvnw spring-boot:run
+```
+
+```bash
+cd notification-service && ./mvnw spring-boot:run
+```
+
+## Fluxos Principais
+
+### Lista manual
+
+- criação de lista diretamente no `list-service`
+- manutenção de itens e participantes
+- compartilhamento sob demanda
+
+### Lista inteligente
+
+- envio de receita para o fluxo `POST /lists/smart`
+- chamada interna do `list-service` para o `recipe-service`
+- extração e normalização de itens antes da persistência
+
+### Compartilhamento e notificação
+
+- acionamento do endpoint de compartilhamento
+- publicação de evento em Kafka
+- consumo do evento pelo `notification-service`
+- envio de notificação aos participantes
+
+## Qualidade e Testes
+
+A cobertura automatizada atualmente é mais ampla no `list-service`, incluindo:
 
 - testes de domínio
 - testes de casos de uso
-- testes de controllers
-- testes de persistência
-- testes de integração reais
-- documentação OpenAPI anotada
+- testes de mapeadores
+- testes de repositório
+- testes Web MVC
+- testes de integração
 
-Os detalhes de arquitetura, endpoints, configuração e estratégia de testes ficam concentrados nos READMEs específicos de cada serviço.
+Os demais serviços possuem cobertura inicial e estão preparados para expansão conforme a evolução das responsabilidades e integrações.
 
-## 8. READMEs dos Serviços
+## Documentação dos Serviços
 
-Cada microsserviço deve possuir sua própria documentação operacional e técnica.
+A documentação específica de cada serviço está disponível em:
 
-Para uma visão mais detalhada de arquitetura interna, endpoints, configuração, execução e estratégia de testes, a leitura recomendada é seguir para o README específico de cada serviço.
+- [README do list-service](./list-service/README.md)
+- [README do recipe-service](./recipe-service/README.md)
+- [README do notification-service](./notification-service/README.md)
 
-Serviços documentados atualmente:
+## Evoluções Naturais
 
-- [list-service](./list-service/README.md)
+Os próximos aprimoramentos mais naturais para a plataforma incluem:
 
-Serviços planejados para documentação futura:
-
-- `notification-service`
-- `recipe-service`
+- fortalecimento da gestão de segredos e credenciais
+- ampliação da cobertura automatizada nos serviços de integração
+- políticas de resiliência para chamadas externas e processamento assíncrono
+- aprofundamento de observabilidade, rastreabilidade e estratégias de deploy
