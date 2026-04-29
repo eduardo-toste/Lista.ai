@@ -1,52 +1,20 @@
 # list-service
 
-Microsserviço responsável pelo gerenciamento de listas de compras, itens e participantes dentro do ecossistema `Lista.ai`.
+`list-service` é o serviço central do `Lista.ai`. Ele concentra o domínio de listas de compras e responde pelos fluxos de criação, manutenção, compartilhamento e geração inteligente de listas.
 
-## Índice
+## Responsabilidades
 
-- [1. Visão Geral](#1-visão-geral)
-- [2. Responsabilidades do Serviço](#2-responsabilidades-do-serviço)
-- [3. Stack Tecnológica](#3-stack-tecnológica)
-- [4. Arquitetura](#4-arquitetura)
-- [5. Estrutura de Pacotes](#5-estrutura-de-pacotes)
-- [6. Endpoints Principais](#6-endpoints-principais)
-- [7. Contratos da API](#7-contratos-da-api)
-- [8. Documentação OpenAPI](#8-documentação-openapi)
-- [9. Configuração](#9-configuração)
-- [10. Execução Local](#10-execução-local)
-- [11. Estratégia de Testes](#11-estratégia-de-testes)
-- [12. Cobertura Atual de Integração](#12-cobertura-atual-de-integração)
-- [13. Limitações e Evoluções Naturais](#13-limitações-e-evoluções-naturais)
+O serviço contempla as seguintes capacidades:
 
-## 1. Visão Geral
+- criação de listas manuais
+- criação de listas inteligentes a partir de receita
+- consulta individual e paginada de listas
+- atualização de nome e exclusão de listas
+- inclusão, edição, remoção e marcação de itens
+- inclusão, edição e remoção de participantes
+- publicação de eventos de compartilhamento em Kafka
 
-O `list-service` é o primeiro microsserviço implementado no repositório `Lista.ai`.
-
-Seu papel é centralizar a lógica de gerenciamento de listas de compras, incluindo:
-
-- criação e consulta de listas
-- manutenção de itens
-- manutenção de participantes
-- validações de negócio relacionadas a duplicidade e consistência da lista
-
-## 2. Responsabilidades do Serviço
-
-O serviço atualmente suporta:
-
-- criar listas de compras
-- buscar uma lista por identificador
-- listar listas com paginação
-- renomear listas
-- remover listas
-- adicionar itens
-- atualizar itens
-- marcar itens como comprados
-- remover itens
-- adicionar participantes
-- atualizar participantes
-- remover participantes
-
-## 3. Stack Tecnológica
+## Stack Tecnológica
 
 - Java 21
 - Spring Boot 3.5
@@ -54,187 +22,203 @@ O serviço atualmente suporta:
 - Spring Data JPA
 - Bean Validation
 - PostgreSQL
+- Spring Cloud OpenFeign
+- Spring Kafka
 - Springdoc OpenAPI
 - JUnit 5
-- H2 para execução dos testes automatizados
+- H2 para testes automatizados
 
-## 4. Arquitetura
+## Arquitetura
 
-O serviço está organizado em um estilo hexagonal pragmático, separando regra de negócio, casos de uso, entrada HTTP e persistência.
+O serviço segue uma organização baseada em arquitetura hexagonal pragmática:
 
-Essa estrutura foi adotada para:
+- `domain`: entidades, enums e regras de negócio
+- `application`: casos de uso, portas, DTOs e mapeadores de aplicação
+- `adapter/inbound/web`: controllers REST, contratos HTTP e tratamento de erros
+- `adapter/outbound/persistence`: integração com persistência JPA
+- `adapter/outbound/api`: integração HTTP com o `recipe-service`
+- `adapter/outbound/messaging`: publicação de eventos Kafka
+- `configuration`: configuração de beans e integração com framework
 
-- reduzir acoplamento entre domínio e framework
-- facilitar testes em diferentes camadas
-- manter responsabilidades mais explícitas
-- preparar o serviço para evoluções futuras com menor impacto estrutural
+Essa estrutura reduz acoplamento com detalhes de infraestrutura e preserva o domínio como núcleo da lógica de negócio.
 
-## 5. Estrutura de Pacotes
+## Fluxos Relevantes
 
-```text
-src/main/java/com/listaai/list
-├── adapter
-│   ├── inbound
-│   │   └── web
-│   └── outbound
-│       └── persistence
-├── application
-│   ├── dto
-│   ├── exception
-│   ├── mapper
-│   ├── port
-│   ├── usecase
-│   └── utils
-├── configuration
-└── domain
-    ├── enums
-    ├── exception
-    └── model
-```
+### Criação de lista manual
 
-### Papel dos principais pacotes
+- a requisição entra por `POST /lists`
+- o contrato web é convertido em comando de aplicação
+- o caso de uso monta o agregado e persiste a lista
+- a resposta retorna a representação consolidada da lista
 
-- `domain`: modelos e regras de negócio
-- `application`: casos de uso, portas e mapeamentos internos
-- `adapter/inbound/web`: controllers, requests, responses e tratamento web
-- `adapter/outbound/persistence`: entidades JPA, repositórios e adaptadores de persistência
-- `configuration`: configuração dos casos de uso e da documentação OpenAPI
+### Criação de lista inteligente
 
-## 6. Endpoints Principais
+- a requisição entra por `POST /lists/smart`
+- o caso de uso aciona o `recipe-service` por meio de uma porta outbound
+- os itens retornados são convertidos para `ShoppingListItem`
+- itens duplicados são normalizados por `nome + unidade`, com soma de quantidades
+- a lista resultante é persistida e retornada
 
-### 6.1. Listas
+### Compartilhamento de lista
+
+- a operação é acionada por `POST /lists/{id}/share`
+- o caso de uso valida a consistência da lista
+- um evento `shopping-list-shared` é publicado em Kafka
+- o processamento de notificação ocorre de forma assíncrona
+
+## Endpoints
+
+### Listas
 
 - `POST /lists`
+- `POST /lists/smart`
 - `GET /lists/{id}`
 - `GET /lists`
 - `PATCH /lists/{id}`
 - `DELETE /lists/{id}`
+- `POST /lists/{id}/share`
 
-### 6.2. Itens
+### Itens
 
 - `POST /lists/{listId}/items`
 - `PATCH /lists/{listId}/items/{itemId}`
 - `PATCH /lists/{listId}/items/{itemId}/purchase`
 - `DELETE /lists/{listId}/items/{itemId}`
 
-### 6.3. Participantes
+### Participantes
 
 - `POST /lists/{listId}/participants`
 - `PATCH /lists/{listId}/participants/{participantId}`
 - `DELETE /lists/{listId}/participants/{participantId}`
 
-## 7. Contratos da API
+## Comportamento da API
 
-O serviço segue as seguintes convenções:
+Convenções adotadas pelo serviço:
 
 - operações de escrita retornam a representação atualizada da lista quando aplicável
 - falhas de validação retornam `400 Bad Request`
 - recursos inexistentes retornam `404 Not Found`
-- conflitos de negócio, como item ou participante duplicado, retornam `409 Conflict`
-- erros seguem a estrutura padronizada de `ErrorResponse`
+- conflitos de negócio, como duplicidade de item ou participante, retornam `409 Conflict`
+- respostas de erro são padronizadas pela camada web
 
-## 8. Documentação OpenAPI
+## Integrações Externas
+
+### PostgreSQL
+
+Persistência principal do agregado de listas.
+
+### `recipe-service`
+
+Consumido no fluxo de lista inteligente via OpenFeign.
+
+Propriedade relevante:
+
+```properties
+clients.recipe-service.url=http://localhost:8082
+```
+
+### Kafka
+
+Utilizado para publicação de eventos de compartilhamento.
+
+Propriedades relevantes:
+
+```properties
+spring.kafka.bootstrap-servers=localhost:19092
+app.kafka.topic.shopping-list-shared=shopping-list-events
+```
+
+## Configuração
+
+Configuração principal local em [application.properties](/Users/eduardotoste/Documents/projects/Lista.ai/list-service/src/main/resources/application.properties:1).
+
+Arquivo de referência:
+
+- [application.properties.example](/Users/eduardotoste/Documents/projects/Lista.ai/list-service/src/main/resources/application.properties.example:1)
+
+Parâmetros locais relevantes:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/list_db
+spring.datasource.username=list_user
+spring.datasource.password=list_pass
+spring.jpa.hibernate.ddl-auto=update
+spring.kafka.bootstrap-servers=localhost:19092
+clients.recipe-service.url=http://localhost:8082
+```
+
+## Execução Local
+
+### 1. Subir a infraestrutura compartilhada
+
+Na raiz do repositório:
+
+```bash
+docker compose up -d
+```
+
+### 2. Executar dependências necessárias
+
+Para o fluxo de lista inteligente, o `recipe-service` deve estar em execução.
+
+### 3. Executar o serviço
+
+No diretório `list-service`:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Endpoint local padrão:
+
+- `http://localhost:8080`
+
+## Documentação OpenAPI
 
 Com a aplicação em execução:
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-A documentação foi anotada com:
+## Testes
 
-- schemas descritivos
-- exemplos de request body
-- documentação de parâmetros
-- respostas de erro documentadas
+A cobertura automatizada inclui:
 
-## 9. Configuração
+- testes de domínio
+- testes de casos de uso
+- testes de mapeadores web e de aplicação
+- testes de persistência
+- testes de repositório
+- testes Web MVC
+- testes de integração com Spring Boot
 
-O datasource local padrão está em `src/main/resources/application.properties`.
-
-Configuração atual:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/list_db
-spring.datasource.username=list_user
-spring.datasource.password=list_pass
-```
-
-Também existe um arquivo de referência:
-
-- `src/main/resources/application.properties.example`
-
-## 10. Execução Local
-
-### 10.1. Subir o banco
-
-A partir da raiz do repositório:
-
-```bash
-export LIST_SERVICE_DB=list_db
-export LIST_SERVICE_DB_USER=list_user
-export LIST_SERVICE_DB_PASSWORD=list_pass
-export LIST_SERVICE_DB_PORT=5432
-docker compose up -d
-```
-
-### 10.2. Executar a aplicação
-
-A partir da pasta `list-service`:
-
-```bash
-./mvnw spring-boot:run
-```
-
-## 11. Estratégia de Testes
-
-O serviço já possui testes em diferentes níveis:
-
-- testes unitários de domínio
-- testes unitários de casos de uso
-- testes de mapeadores
-- testes de repositório com JPA
-- testes de controller com `@WebMvcTest`
-- testes de integração reais com `@SpringBootTest`
-
-### Comandos úteis
-
-Executar toda a suíte:
+Comandos úteis:
 
 ```bash
 ./mvnw test
 ```
 
-Executar apenas os testes de integração:
+```bash
+./mvnw -DskipTests compile
+```
 
 ```bash
 ./mvnw test -Dtest=ShoppingListIntegrationTest
 ```
 
-Executar apenas os testes de controller:
+## Considerações de Projeto
 
-```bash
-./mvnw test -Dtest=ShoppingListControllerWebMvcTest,ShoppingListItemControllerWebMvcTest,ShoppingListParticipantControllerWebMvcTest
-```
+Decisões relevantes na implementação:
 
-## 12. Cobertura Atual de Integração
+- a integração HTTP com o `recipe-service` está isolada por porta e adapter outbound
+- a deduplicação de itens extraídos da receita ocorre antes da entrada no agregado
+- o compartilhamento é desacoplado da entrega de notificação por meio de evento assíncrono
 
-A suíte de integração atual cobre:
+## Evoluções Naturais
 
-- criação e busca de lista
-- erros de validação
-- retorno `404` para recursos inexistentes
-- atualização e remoção de lista
-- fluxo completo de itens
-- fluxo completo de participantes
-- cenários de conflito, como item duplicado e participante duplicado
+Possíveis aprimoramentos para o serviço:
 
-## 13. Limitações e Evoluções Naturais
-
-Os principais pontos que ainda podem evoluir neste serviço são:
-
-- adoção de `Testcontainers` para testes com PostgreSQL real
-- refinamento do contrato de paginação
-- evolução de alguns contratos de update, se a API passar a suportar parcialidade mais explícita
-- consolidação de documentação operacional adicional, caso o serviço cresça em infraestrutura e integrações
-
-No estado atual, o `list-service` já é um serviço funcional, testado e documentado, com base suficiente para evoluções mais robustas.
+- políticas de resiliência para integrações HTTP
+- refinamento transacional do fluxo de publicação de eventos
+- adoção de Testcontainers para cenários com infraestrutura real
+- evolução da observabilidade dos fluxos de compartilhamento e lista inteligente
