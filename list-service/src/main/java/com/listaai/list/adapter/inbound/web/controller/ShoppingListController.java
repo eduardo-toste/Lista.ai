@@ -2,9 +2,11 @@ package com.listaai.list.adapter.inbound.web.controller;
 
 import com.listaai.list.adapter.inbound.web.mapper.ShoppingListWebMapper;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
+import com.listaai.list.adapter.inbound.web.request.CreateSmartShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.request.UpdateShoppingListNameRequest;
 import com.listaai.list.adapter.inbound.web.response.ShoppingListResponse;
 import com.listaai.list.application.dto.input.ShoppingListCommand;
+import com.listaai.list.application.dto.input.SmartShoppingListCommand;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.port.inbound.lists.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 public class ShoppingListController {
 
     private final CreateShoppingListUseCase createShoppingListUseCase;
+    private final CreateSmartShoppingListUseCase createSmartShoppingListUseCase;
     private final GetShoppingListUseCase getShoppingListUseCase;
     private final UpdateListNameUseCase updateListNameUseCase;
     private final DeleteShoppingListUseCase deleteShoppingListUseCase;
@@ -48,6 +51,14 @@ public class ShoppingListController {
     public ResponseEntity<ShoppingListResponse> createShoppingList(@RequestBody @Valid CreateShoppingListRequest request) {
         ShoppingListCommand command = shoppingListMapper.toCommand(request);
         ShoppingListOutput output = createShoppingListUseCase.createShoppingList(command);
+        ShoppingListResponse response = shoppingListMapper.toResponse(output);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/smart")
+    public ResponseEntity<ShoppingListResponse> createSmartShoppingList(@RequestBody @Valid CreateSmartShoppingListRequest request) {
+        SmartShoppingListCommand command = shoppingListMapper.toCommand(request);
+        ShoppingListOutput output = createSmartShoppingListUseCase.createSmartShoppingList(command);
         ShoppingListResponse response = shoppingListMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }
