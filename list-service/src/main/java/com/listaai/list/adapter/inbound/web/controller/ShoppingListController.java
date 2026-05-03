@@ -55,6 +55,16 @@ public class ShoppingListController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(
+            summary = "Create a smart shopping list",
+            description = "Creates a new shopping list using the smart creation flow based on the request payload."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Smart shopping list created successfully",
+                    content = @Content(schema = @Schema(implementation = ShoppingListResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("/smart")
     public ResponseEntity<ShoppingListResponse> createSmartShoppingList(@RequestBody @Valid CreateSmartShoppingListRequest request) {
         SmartShoppingListCommand command = shoppingListMapper.toCommand(request);
@@ -132,8 +142,18 @@ public class ShoppingListController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Share a shopping list",
+            description = "Shares an existing shopping list using the configured sharing flow."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Shopping list shared successfully"),
+            @ApiResponse(responseCode = "404", description = "Shopping list not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("{id}/share")
-    public ResponseEntity<Void> shareShoppingList(@PathVariable Long id) {
+    public ResponseEntity<Void> shareShoppingList(
+            @Parameter(description = "ID of the shopping list", required = true) @PathVariable Long id) {
         shareShoppingListUseCase.shareShoppingList(id);
         return ResponseEntity.ok().build();
     }
