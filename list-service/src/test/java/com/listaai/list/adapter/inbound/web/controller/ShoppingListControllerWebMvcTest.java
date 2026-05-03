@@ -9,16 +9,20 @@ import com.listaai.list.adapter.inbound.web.mapper.ShoppingListWebMapper;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListItemRequest;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListParticipantRequest;
 import com.listaai.list.adapter.inbound.web.request.CreateShoppingListRequest;
+import com.listaai.list.adapter.inbound.web.request.CreateSmartShoppingListRequest;
 import com.listaai.list.adapter.inbound.web.request.UpdateShoppingListNameRequest;
 import com.listaai.list.application.dto.output.ShoppingListItemOutput;
 import com.listaai.list.application.dto.output.ShoppingListOutput;
 import com.listaai.list.application.dto.output.ShoppingListParticipantOutput;
 import com.listaai.list.application.exception.ShoppingListNotFoundException;
+import com.listaai.list.application.port.inbound.lists.CreateSmartShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.CreateShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.DeleteShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.GetShoppingListUseCase;
+import com.listaai.list.application.port.inbound.lists.ShareShoppingListUseCase;
 import com.listaai.list.application.port.inbound.lists.UpdateListNameUseCase;
 import com.listaai.list.domain.enums.ItemUnit;
+import com.listaai.list.domain.exception.list.EmptyShoppingListCannotBeSharedException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +64,9 @@ class ShoppingListControllerWebMvcTest {
     private CreateShoppingListUseCase createShoppingListUseCase;
 
     @MockitoBean
+    private CreateSmartShoppingListUseCase createSmartShoppingListUseCase;
+
+    @MockitoBean
     private GetShoppingListUseCase getShoppingListUseCase;
 
     @MockitoBean
@@ -67,6 +74,9 @@ class ShoppingListControllerWebMvcTest {
 
     @MockitoBean
     private DeleteShoppingListUseCase deleteShoppingListUseCase;
+
+    @MockitoBean
+    private ShareShoppingListUseCase shareShoppingListUseCase;
 
     @Test
     void shouldCreateShoppingList() throws Exception {
@@ -195,6 +205,55 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.path").value("/lists"));
 
         verify(createShoppingListUseCase, never()).createShoppingList(any());
+    }
+
+    @Test
+    void shouldCreateSmartShoppingList() throws Exception {
+        ShoppingListOutput output = new ShoppingListOutput(
+                1L,
+                "Jantar especial",
+                List.of(new ShoppingListItemOutput(10L, "Tomate", 3, ItemUnit.UN, false)),
+                List.of(new ShoppingListParticipantOutput(20L, "Eduardo", "11999999999"))
+        );
+
+        when(createSmartShoppingListUseCase.createSmartShoppingList(any())).thenReturn(output);
+
+        CreateSmartShoppingListRequest request = new CreateSmartShoppingListRequest(
+                "Jantar especial",
+                List.of(new CreateShoppingListParticipantRequest("Eduardo", "11999999999")),
+                "preciso de ingredientes para macarronada"
+        );
+
+        mockMvc.perform(post("/lists/smart")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Jantar especial"))
+                .andExpect(jsonPath("$.items[0].name").value("Tomate"))
+                .andExpect(jsonPath("$.participants[0].phoneNumber").value("11999999999"));
+
+        verify(createSmartShoppingListUseCase).createSmartShoppingList(any());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenSmartShoppingListRecipeMessageIsInvalid() throws Exception {
+        CreateSmartShoppingListRequest request = new CreateSmartShoppingListRequest(
+                "Jantar especial",
+                List.of(new CreateShoppingListParticipantRequest("Eduardo", "11999999999")),
+                null
+        );
+
+        mockMvc.perform(post("/lists/smart")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("recipeMessage: Recipe message must not be blank"))
+                .andExpect(jsonPath("$.path").value("/lists/smart"));
+
+        verify(createSmartShoppingListUseCase, never()).createSmartShoppingList(any());
     }
 
     @Test
@@ -404,5 +463,32 @@ class ShoppingListControllerWebMvcTest {
                 .andExpect(jsonPath("$.path").value("/lists/999"));
 
         verify(deleteShoppingListUseCase).delete(listId);
+    }
+
+    @Test
+    void shouldShareShoppingList() throws Exception {
+        Long listId = 1L;
+
+        mockMvc.perform(post("/lists/{id}/share", listId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(""));
+
+        verify(shareShoppingListUseCase).shareShoppingList(listId);
+    }
+
+    @Test
+    void shouldReturnConflictWhenShoppingListCannotBeShared() throws Exception {
+        Long listId = 1L;
+        doThrow(new EmptyShoppingListCannotBeSharedException())
+                .when(shareShoppingListUseCase).shareShoppingList(listId);
+
+        mockMvc.perform(post("/lists/{id}/share", listId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Empty list can't be shared"))
+                .andExpect(jsonPath("$.path").value("/lists/1/share"));
+
+        verify(shareShoppingListUseCase).shareShoppingList(listId);
     }
 }
